@@ -2,9 +2,6 @@
 
 A hybrid quantum-classical machine learning project that applies **Quantum Generative Adversarial Networks (QGAN)** to generate synthetic sleep EEG data. Built with **PennyLane** and **PyTorch**.
 
-> 📄 Paper submitted to **FORCE 2026 Conference**
-> 👤 First Author: Ikram Ullah Khan | Co-Author: Sthefanie Passo (UTSA)
-
 ---
 
 ## 🚀 What This Project Does
