@@ -1,0 +1,12 @@
+@"
+qgan310/
+data/
+figures/
+__pycache__/
+*.pyc
+*.edf
+*.egg-info/
+dist/
+build/
+.env
+"@ | Out-File -FilePath .gitignore -Encoding utf8
