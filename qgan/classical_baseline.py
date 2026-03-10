@@ -1,21 +1,22 @@
-# Classical GAN Baseline
-# Same depth as quantum model for fair comparison
+# qgan/classical_baseline.py
+# Classical GAN for fair comparison with QGAN
+# Same depth and capacity as the quantum model
 
-import torch
 import torch.nn as nn
+from qgan.config import N_LAYERS
+
+HIDDEN = 4 * N_LAYERS * 2   # 16 units, same capacity as quantum model
 
 
 class ClassicalGenerator(nn.Module):
-    """Classical generator with same capacity as quantum generator."""
-    def __init__(self, n_features=4, hidden_dim=16):
+    # takes random noise, outputs fake sleep data in range [-1, 1]
+
+    def __init__(self, n_features=4):
         super().__init__()
         self.net = nn.Sequential(
-            nn.Linear(n_features, hidden_dim),
-            nn.Tanh(),
-            nn.Linear(hidden_dim, hidden_dim),
-            nn.Tanh(),
-            nn.Linear(hidden_dim, n_features),
-            nn.Tanh()   # output in [-1, 1] like quantum circuit
+            nn.Linear(n_features, HIDDEN), nn.Tanh(),
+            nn.Linear(HIDDEN, HIDDEN),     nn.Tanh(),
+            nn.Linear(HIDDEN, n_features), nn.Tanh()
         )
 
     def forward(self, x):
@@ -23,15 +24,14 @@ class ClassicalGenerator(nn.Module):
 
 
 class ClassicalDiscriminator(nn.Module):
-    """Classical discriminator with same capacity as quantum discriminator."""
-    def __init__(self, n_features=4, hidden_dim=16):
+    # takes real or fake data, outputs judgment scores
+
+    def __init__(self, n_features=4):
         super().__init__()
         self.net = nn.Sequential(
-            nn.Linear(n_features, hidden_dim),
-            nn.LeakyReLU(0.2),
-            nn.Linear(hidden_dim, hidden_dim),
-            nn.LeakyReLU(0.2),
-            nn.Linear(hidden_dim, n_features)
+            nn.Linear(n_features, HIDDEN), nn.LeakyReLU(0.2),
+            nn.Linear(HIDDEN, HIDDEN),     nn.LeakyReLU(0.2),
+            nn.Linear(HIDDEN, n_features)
         )
 
     def forward(self, x):

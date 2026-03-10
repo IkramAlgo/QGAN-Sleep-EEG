@@ -1,70 +1,55 @@
 # qgan/data_loader.py
-# Updated with normalization for stable quantum circuit training
+# Loads Sleep EDF and returns first N features normalized to [-1, 1]
 
 import numpy as np
 import torch
 from torch.utils.data import TensorDataset, DataLoader
 import pyedflib
 
+from qgan.config import EDF_FILE_PATH, EEG_CHANNEL, EPOCH_SECONDS, ALL_FEATURE_NAMES, BATCH_SIZE
 
-def load_sleep_edf(path="data/EPCTL03.edf"):
-    """Return normalized array shape (n_epochs, n_features).
+# cache so we don't re-read the EDF file for every experiment
+_cache = None
 
-    Features per 30-second epoch:
-        0 - mean
-        1 - std
-        2 - min
-        3 - max
 
-    All features are normalized to [-1, 1] range which matches
-    the output range of quantum PauliZ expectation values.
-    """
+def load_sleep_edf(path=EDF_FILE_PATH):
+    global _cache
+    if _cache is not None:
+        return _cache
+
     with pyedflib.EdfReader(path) as f:
-        sigs = f.readSignal(0)        # first EEG channel
-        fs   = f.getSampleFrequency(0)
+        signal      = f.readSignal(EEG_CHANNEL)
+        sample_rate = f.getSampleFrequency(EEG_CHANNEL)
 
-    samples_per_epoch = int(30 * fs)
-    n_epochs = len(sigs) // samples_per_epoch
+    samples_per_epoch = int(EPOCH_SECONDS * sample_rate)
+    n_epochs          = len(signal) // samples_per_epoch
+
     if n_epochs == 0:
-        raise ValueError("EDF recording too short for a single 30-sec epoch")
+        raise ValueError("EDF file too short for a single 30-second epoch.")
 
-    trimmed = sigs[: n_epochs * samples_per_epoch]
-    epochs  = trimmed.reshape(n_epochs, samples_per_epoch)
+    signal = signal[: n_epochs * samples_per_epoch]
+    epochs = signal.reshape(n_epochs, samples_per_epoch)
 
-    feat_list = []
-    for e in epochs:
-        mean = float(e.mean())
-        std  = float(e.std())
-        mn   = float(e.min())
-        mx   = float(e.max())
-        feat_list.append([mean, std, mn, mx])
-
-    feats = np.array(feat_list, dtype=np.float32)
-
-    # Normalize each feature to [-1, 1] range
-    # This is critical for quantum circuits which output in [-1, 1]
-    for i in range(feats.shape[1]):
-        col = feats[:, i]
-        col_min, col_max = col.min(), col.max()
-        if col_max - col_min > 1e-8:
-            feats[:, i] = 2.0 * (col - col_min) / (col_max - col_min) - 1.0
-        else:
-            feats[:, i] = 0.0
-
-    print(f"Loaded {n_epochs} sleep epochs | Feature shape: {feats.shape}")
-    print(f"Feature ranges after normalization:")
-    feature_names = ["mean", "std", "min", "max"]
-    for i, name in enumerate(feature_names):
-        print(f"  {name}: [{feats[:,i].min():.3f}, {feats[:,i].max():.3f}]")
-
-    return torch.from_numpy(feats)
-
-
-def get_data_loader(batch_size):
-    data = load_sleep_edf()
-    return DataLoader(
-        TensorDataset(data),
-        batch_size=batch_size,
-        shuffle=True,
-        drop_last=True    # avoid incomplete final batch issues
+    # extract all 4 features — experiments pick first N
+    features = np.array(
+        [[e.mean(), e.std(), e.min(), e.max()] for e in epochs],
+        dtype=np.float32
     )
+
+    # normalize each column to [-1, 1]
+    for i in range(features.shape[1]):
+        lo, hi = features[:, i].min(), features[:, i].max()
+        features[:, i] = (2.0 * (features[:, i] - lo) / (hi - lo) - 1.0) \
+                         if hi - lo > 1e-8 else 0.0
+
+    _cache = torch.from_numpy(features)
+    return _cache
+
+
+def get_data_loader(n_features, batch_size=BATCH_SIZE, path=EDF_FILE_PATH):
+    """Return DataLoader using only the first n_features columns."""
+    data = load_sleep_edf(path)[:, :n_features]
+    print(f"  Dataset: {data.shape[0]} epochs | {n_features} features "
+          f"({ALL_FEATURE_NAMES[:n_features]}) | range [-1,1]")
+    return DataLoader(TensorDataset(data), batch_size=batch_size,
+                      shuffle=True, drop_last=True)
