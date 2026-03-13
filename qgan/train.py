@@ -1,5 +1,6 @@
 # qgan/train.py
-# Runs QGAN vs Classical GAN for each feature count in FEATURE_SWEEP
+# Runs Hybrid QGAN (Quantum Generator + Classical Discriminator) vs Classical GAN
+# Architecture 1: replaces quantum discriminator with classical MLP
 # Saves all results to results.json for plotting
 # Run: python -m qgan.train
 
@@ -13,8 +14,11 @@ from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_sc
 from qgan.config import (EPOCHS, BATCH_SIZE, LEARNING_RATE, LR_STEP_SIZE,
                           LR_GAMMA, GRAD_CLIP, EVAL_EVERY, EVAL_SAMPLES,
                           FEATURE_SWEEP, ALL_FEATURE_NAMES, WEIGHT_INIT_STD)
-from qgan.models import GeneratorQuantumCircuit, DiscriminatorQuantumCircuit
-from qgan.classical_baseline import ClassicalGenerator, ClassicalDiscriminator
+
+# CHANGED: removed DiscriminatorQuantumCircuit, added ClassicalDiscriminator
+from qgan.models import GeneratorQuantumCircuit, ClassicalDiscriminator
+
+from qgan.classical_baseline import ClassicalGenerator, ClassicalDiscriminator as ClassicalDiscriminatorBaseline
 from qgan.data_loader import get_data_loader
 
 BCE = torch.nn.BCELoss()
@@ -80,8 +84,11 @@ def classification_metrics(generator, disc, loader, n_features):
 
 
 def train(generator, disc, loader, n_features, name):
-    opt_g = torch.optim.Adam(generator.parameters(), lr=LEARNING_RATE, betas=(0.5, 0.999))
-    opt_d = torch.optim.Adam(disc.parameters(),      lr=LEARNING_RATE, betas=(0.5, 0.999))
+    # discriminator learns 5x faster than generator
+    # reason: classical discriminator needs to stay ahead of quantum generator
+    #         so it can provide meaningful gradients back to generator
+    opt_g = torch.optim.Adam(generator.parameters(), lr=LEARNING_RATE,       betas=(0.5, 0.999))
+    opt_d = torch.optim.Adam(disc.parameters(),      lr=LEARNING_RATE * 5.0, betas=(0.5, 0.999))
     sch_g = torch.optim.lr_scheduler.StepLR(opt_g, LR_STEP_SIZE, LR_GAMMA)
     sch_d = torch.optim.lr_scheduler.StepLR(opt_d, LR_STEP_SIZE, LR_GAMMA)
 
@@ -159,30 +166,29 @@ def run_experiment(n_features):
 
     loader = get_data_loader(n_features)
 
-    # QGAN
+    # CHANGED: q_disc is now ClassicalDiscriminator instead of DiscriminatorQuantumCircuit
+    # Generator stays quantum — variance advantage preserved
+    # Discriminator is now classical — no barren plateau, gradients flow
     q_gen  = GeneratorQuantumCircuit(n_qubits=n_features)
-    q_disc = DiscriminatorQuantumCircuit(n_qubits=n_features)
-    q_hist, q_gen, q_disc = train(q_gen, q_disc, loader, n_features, "QGAN (CPU-Sim)")
+    q_disc = ClassicalDiscriminator(input_dim=n_features)
+    q_hist, q_gen, q_disc = train(q_gen, q_disc, loader, n_features, "Hybrid QGAN (Quantum Gen + Classical Disc)")
 
-    # Classical GAN
+    # Classical GAN — fully classical, unchanged
     c_gen  = ClassicalGenerator(n_features)
-    c_disc = ClassicalDiscriminator(n_features)
+    c_disc = ClassicalDiscriminatorBaseline(n_features)
     c_hist, c_gen, c_disc = train(c_gen, c_disc, loader, n_features, "Classical GAN")
 
     # Classification metrics
     q_clf = classification_metrics(q_gen, q_disc, loader, n_features)
     c_clf = classification_metrics(c_gen, c_disc, loader, n_features)
 
-    # Simulated QPU timing: QPU circuits are ~3-5x faster than CPU simulation
-    # Based on IBM Quantum benchmarks for 4-qubit circuits
-    qpu_speedup  = 4.0
-    qpu_avg_time = round(q_hist["avg_time"] / qpu_speedup, 4)
-
     print(f"\n  Results ({n_features} features):")
-    print(f"  QGAN  — MeanMAE:{q_hist['mean_MAE'][-1]:.4f} StdMAE:{q_hist['std_MAE'][-1]:.4f} "
-          f"Acc:{q_clf['Accuracy']:.4f} F1:{q_clf['F1']:.4f} AvgTime:{q_hist['avg_time']:.1f}s")
-    print(f"  Class — MeanMAE:{c_hist['mean_MAE'][-1]:.4f} StdMAE:{c_hist['std_MAE'][-1]:.4f} "
-          f"Acc:{c_clf['Accuracy']:.4f} F1:{c_clf['F1']:.4f} AvgTime:{c_hist['avg_time']:.1f}s")
+    print(f"  HybridQGAN — MeanMAE:{q_hist['mean_MAE'][-1]:.4f} StdMAE:{q_hist['std_MAE'][-1]:.4f} "
+          f"Acc:{q_clf['Accuracy']:.4f} F1:{q_clf['F1']:.4f} "
+          f"Spec:{q_clf['Specificity']:.4f} AvgTime:{q_hist['avg_time']:.1f}s")
+    print(f"  Classical  — MeanMAE:{c_hist['mean_MAE'][-1]:.4f} StdMAE:{c_hist['std_MAE'][-1]:.4f} "
+          f"Acc:{c_clf['Accuracy']:.4f} F1:{c_clf['F1']:.4f} "
+          f"Spec:{c_clf['Specificity']:.4f} AvgTime:{c_hist['avg_time']:.1f}s")
 
     return {
         "n_features":    n_features,
@@ -191,7 +197,6 @@ def run_experiment(n_features):
             "history": {k: [float(v) for v in vals] if isinstance(vals, list) else float(vals)
                         for k, vals in q_hist.items()},
             "clf":     q_clf,
-            "qpu_avg_time": qpu_avg_time,
         },
         "classical": {
             "history": {k: [float(v) for v in vals] if isinstance(vals, list) else float(vals)
