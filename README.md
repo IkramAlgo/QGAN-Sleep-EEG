@@ -2,8 +2,6 @@
 
 A hybrid quantum-classical machine learning project applying **Quantum Generative Adversarial Networks (QGAN)** to generate synthetic sleep EEG data. Built with **PennyLane**, **PyTorch**, and **IBM Qiskit** for quantum noise simulation.
 
-> Submitted to **FORCE 2026 Conference**
-
 ---
 
 ## 🚀 What This Project Does
