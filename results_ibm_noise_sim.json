@@ -1,0 +1,53 @@
+{
+  "architecture": "Arch C \u2014 6-qubit ring CNOT RX->CNOT->RY WGAN-GP",
+  "n_features": 4,
+  "n_qubits": 6,
+  "n_layers": 2,
+  "shots": 1024,
+  "epochs": 3,
+  "device": "CPU-Sim (noiseless fallback)",
+  "history": {
+    "gen_loss": [
+      0.14567738944102848,
+      0.303668540929045,
+      0.5076925120538189
+    ],
+    "disc_loss": [
+      6.801715360369001,
+      3.541110498564584,
+      0.8617535524425053
+    ],
+    "mean_MAE": [
+      0.3239,
+      0.2409,
+      0.2742
+    ],
+    "std_MAE": [
+      0.101,
+      0.0978,
+      0.0964
+    ],
+    "mae_epochs": [
+      1,
+      2,
+      3
+    ],
+    "times": [
+      565.5018527507782,
+      496.70501685142517,
+      566.2243058681488
+    ],
+    "avg_time_per_epoch": 542.81
+  },
+  "mae": {
+    "mean_MAE": 0.2781,
+    "std_MAE": 0.1152
+  },
+  "clf": {
+    "Accuracy": 0.485,
+    "Precision": 0.4,
+    "Sensitivity": 0.06,
+    "Specificity": 0.91,
+    "F1": 0.1043
+  }
+}

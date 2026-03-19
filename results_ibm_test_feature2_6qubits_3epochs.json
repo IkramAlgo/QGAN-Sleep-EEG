@@ -1,0 +1,59 @@
+[
+  {
+    "n_features": 2,
+    "n_qubits": 6,
+    "latent_dim": 2,
+    "device": "QPU-Sim (IBM 127-qubit backend, 1024 shots)",
+    "shots": 1024,
+    "epochs": 3,
+    "loss": "WGAN-GP + MINE",
+    "discriminator": "classical MLP with spectral norm",
+    "entanglement": "alternating ring+all-to-all",
+    "adaptive_noise": true,
+    "history": {
+      "gen_loss": [
+        0.032254602604856096,
+        0.0031927261346330247,
+        -0.005031103268265724
+      ],
+      "disc_loss": [
+        8.263526558876038,
+        7.383338689804077,
+        6.46878045797348
+      ],
+      "mine_loss": [
+        0.10533230006694794,
+        0.10549299605190754,
+        0.09482383821159601
+      ],
+      "mean_MAE": [
+        0.4483,
+        0.4783,
+        0.4485
+      ],
+      "std_MAE": [
+        0.1293,
+        0.1475,
+        0.1497
+      ],
+      "mae_epochs": [
+        1,
+        2,
+        3
+      ],
+      "times": [
+        1211.9124989509583,
+        533.7309317588806,
+        525.5162599086761
+      ],
+      "avg_time": 757.0532
+    },
+    "clf": {
+      "Accuracy": 0.5,
+      "Precision": 0.5,
+      "Sensitivity": 1.0,
+      "Specificity": 0.0,
+      "F1": 0.6667
+    }
+  }
+]
