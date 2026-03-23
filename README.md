@@ -65,7 +65,7 @@ Four quantum generator architectures were tested, each with both BCE and WGAN-GP
 | HybridQGAN CPU-Sim (BCE) | 0.500 | 0.000 | 0.667 | **0.0797** | 67.6s |
 | HybridQGAN QPU-Sim (IBM) | 0.500 | 0.000 | 0.667 | 0.1149 | 1878s |
 
-### Architecture Ablation — Full Results (4 Features)
+### Architecture Ablation — Full Results (4 Features, 50 Epochs)
 
 | Architecture | Loss | Accuracy | Specificity | F1 | Std MAE | Time/Epoch |
 |---|---|---|---|---|---|---|
@@ -76,6 +76,33 @@ Four quantum generator architectures were tested, each with both BCE and WGAN-GP
 | **Arch C — 6-Qubit** | **WGAN-GP** | **0.893** | **0.955** ✓ | **0.885** | **0.1051** | 252.1s |
 | Arch D — All-to-All | BCE | 0.920 | 0.880 ✓ | 0.923 | 0.1396 | 45.8s |
 | Arch D — All-to-All | WGAN-GP | 0.828 | 0.665 ✓ | 0.852 | 0.1364 | 173.2s |
+
+---
+
+### Arch C WGAN-GP — Local Test Results (3 Epochs, CPU Noiseless, 4 Features)
+
+> These are the **local verification results** run before ARC submission — 3 epochs only, noiseless CPU fallback. Final ARC results (50 epochs, real QPU) will replace this section.
+
+| Metric | Value | Notes |
+|---|---|---|
+| Device | CPU-Sim (noiseless fallback) | Noise sim fell back due to RAM limit |
+| Epochs | 3 of 50 | Local test only |
+| Mean MAE | 0.2781 | Will improve at 50 epochs |
+| Std MAE | 0.1152 | Already close to CPU Arch C (0.1051) |
+| Accuracy | 0.485 | Low — expected at only 3 epochs |
+| Specificity | 0.910 | Promising even at 3 epochs |
+| F1 | 0.1043 | Low — expected at only 3 epochs |
+| Avg Time/Epoch | 542.8s | ~9 min/epoch on local CPU |
+
+**Loss convergence after 3 epochs:**
+
+| Epoch | Generator Loss | Critic Loss | Trend |
+|---|---|---|---|
+| 1 | +0.1457 | +6.8017 | Critic dominating — normal start |
+| 2 | +0.3037 | +3.5411 | Generator strengthening |
+| 3 | +0.5077 | +0.8618 | Converging — healthy WGAN-GP |
+
+Critic dropping from 6.80 → 0.86 in 3 epochs confirms healthy WGAN-GP training dynamics. Full 50-epoch ARC results expected to match or exceed CPU Arch C results (Spec=0.955, StdMAE=0.1051).
 
 ---
 
@@ -118,7 +145,7 @@ QGAN-Sleep-EEG/
 │   ├── train.py                   # Arch A BCE → results.json
 │   ├── train_wgan.py              # Arch A WGAN-GP → results_wgan.json
 │   ├── train_arch.py              # Arch B, C, D × BCE + WGAN-GP → results_arch_*.json
-│   ├── train_ibm.py               # Arch C IBM QPU → results_ibm_qpu.json
+│   ├── train_ibm.py               # Arch C feature sweep [2,3,4] → results_ibm_*.json
 │   │
 │   ├── classical_baseline.py      # Classical GAN (generator + discriminator)
 │   │
@@ -128,15 +155,25 @@ QGAN-Sleep-EEG/
 │
 ├── figures/                       # All generated paper figures
 ├── data/                          # Place EPCTL03.edf here (not included)
-├── ibm_quantum_setup.py           # One-time IBM credentials setup (do not push to GitHub)
+├── ibm_quantum_setup.py           # One-time IBM credentials setup (do not push)
+│
 ├── results.json                   # Arch A BCE results
 ├── results_wgan.json              # Arch A WGAN-GP results
 ├── results_arch_B_bce.json        # Arch B BCE results
 ├── results_arch_B_wgan.json       # Arch B WGAN-GP results
-├── results_arch_C_wgan.json       # Arch C WGAN-GP results (recommended)
+├── results_arch_C_wgan.json       # Arch C WGAN-GP CPU results
 ├── results_arch_D_bce.json        # Arch D BCE results
 ├── results_arch_D_wgan.json       # Arch D WGAN-GP results
-├── results_ibm_qpu.json           # ARC QPU final results
+│
+├── results_ibm_local.json         # Local 3-epoch test (all 3 feature counts)
+├── results_ibm_local_2f.json      # Local test — 2 features
+├── results_ibm_local_3f.json      # Local test — 3 features
+├── results_ibm_local_4f.json      # Local test — 4 features
+├── results_ibm_qpu.json           # ARC 50-epoch real QPU (all 3 feature counts)
+├── results_ibm_qpu_2f.json        # ARC QPU — 2 features
+├── results_ibm_qpu_3f.json        # ARC QPU — 3 features
+├── results_ibm_qpu_4f.json        # ARC QPU — 4 features
+│
 ├── requirements.txt
 └── README.md
 ```
@@ -186,7 +223,7 @@ python -m qgan.train_wgan
 # Arch B, C, D ablation — saves to results_arch_*.json (~7 hours total)
 python -m qgan.train_arch
 
-# IBM local test — 3 epochs, verifies code before ARC (~27 min)
+# IBM local test — 3 epochs, features [2,3,4], verifies code before ARC
 python -m qgan.train_ibm
 
 # Generate all figures
@@ -201,74 +238,58 @@ python -m qgan.plot_arch
 
 ### What ARC is used for
 
-All CPU experiments (Arch A, B, C, D) were run on a local machine. ARC is used only for the **real IBM QPU run** of Arch C + WGAN-GP with 50 epochs — the final paper result that demonstrates quantum hardware performance.
-
-### Prerequisites
-
-- IBM Cloud account with quantum computing access
-- IBM API key and CRN (from IBM Cloud dashboard)
-- ARC account with job submission access
-
----
+All CPU experiments were run on a local machine. ARC is used only for the **real IBM QPU run** of Arch C + WGAN-GP across all 3 feature counts (2, 3, 4) with 50 epochs each — the final paper QPU results.
 
 ### Step 1 — Set up IBM credentials locally
 
-Edit `ibm_quantum_setup.py` and add your IBM API key and CRN, then run:
-
 ```bash
+# Edit ibm_quantum_setup.py with your IBM API key and CRN, then run:
 python ibm_quantum_setup.py
+# Creates: ibm_credentials.txt and ibm_backend.txt
 ```
 
-This creates `ibm_credentials.txt` with your saved credentials.
-
-> ⚠️ **Never push `ibm_credentials.txt` or `ibm_quantum_setup.py` to GitHub.**
-
----
+> ⚠️ **Never push `ibm_credentials.txt` to GitHub.**
 
 ### Step 2 — Transfer files to ARC
 
 ```bash
-# Transfer project folder (via GitHub clone is fine for code)
+# Clone project on ARC (code only — no credentials)
 ssh username@arc.university.edu
 git clone https://github.com/IkramAlgo/QGAN-Sleep-EEG.git
 
-# Transfer credentials and data SEPARATELY (not via GitHub)
+# Transfer credentials and data separately
 scp ibm_credentials.txt username@arc.university.edu:~/QGAN-Sleep-EEG/
 scp data/EPCTL03.edf    username@arc.university.edu:~/QGAN-Sleep-EEG/data/
 ```
 
----
-
 ### Step 3 — Set up environment on ARC
 
 ```bash
-ssh username@arc.university.edu
 cd ~/QGAN-Sleep-EEG
-
 conda create -n qgan310 python=3.10 -y
 conda activate qgan310
 pip install -r requirements.txt
 ```
 
----
-
-### Step 4 — Test first (3 epochs, no QPU)
+### Step 4 — Test first (3 epochs, all features)
 
 ```bash
 python -m qgan.train_ibm
 ```
 
-Expected output — if you see this with no errors, code is ready:
+Expected — if no errors across all 3 feature counts, code is ready:
 ```
-Epoch [  1/  3] G:... C:... MeanMAE:... StdMAE:... Time:...s
-Epoch [  2/  3] ...
-Epoch [  3/  3] ...
-Saved: results_ibm_noise_sim.json
+EXPERIMENT: 2 features ['Mean', 'Std Dev']
+  Epoch [  1/  3] G:... C:... MeanMAE:... StdMAE:... Time:...s
+  ...
+EXPERIMENT: 3 features ['Mean', 'Std Dev', 'Min']
+  ...
+EXPERIMENT: 4 features ['Mean', 'Std Dev', 'Min', 'Max']
+  ...
+Combined results saved: results_ibm_local.json
 ```
 
----
-
-### Step 5 — Submit full QPU job (50 epochs)
+### Step 5 — Submit full QPU job (50 epochs, all features)
 
 **Option A — Direct run:**
 ```bash
@@ -283,7 +304,7 @@ Create `run_arc.sh`:
 #SBATCH --job-name=qgan_arch_c
 #SBATCH --output=qgan_%j.log
 #SBATCH --error=qgan_%j.err
-#SBATCH --time=24:00:00
+#SBATCH --time=48:00:00
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=8
@@ -294,32 +315,29 @@ cd ~/QGAN-Sleep-EEG
 python -m qgan.train_ibm --arc
 ```
 
-Submit and monitor:
 ```bash
 sbatch run_arc.sh
 squeue -u $USER
 tail -f qgan_<JOBID>.log
 ```
 
----
-
 ### Step 6 — Retrieve results
 
 ```bash
-scp username@arc.university.edu:~/QGAN-Sleep-EEG/results_ibm_qpu.json ./
-scp username@arc.university.edu:~/QGAN-Sleep-EEG/checkpoint_ibm_epoch*.json ./
+scp username@arc.university.edu:~/QGAN-Sleep-EEG/results_ibm_qpu*.json ./
+scp username@arc.university.edu:~/QGAN-Sleep-EEG/checkpoint_ibm_*.json ./
 ```
 
----
+### ARC Timing Estimates
 
-### ARC Timing and Safety
+| Feature Count | Est. Time (50 epochs) |
+|---|---|
+| 2 features | ~8–12 hours |
+| 3 features | ~10–15 hours |
+| 4 features | ~12–24 hours |
+| **Total all 3** | **~30–50 hours** |
 
-| Mode | Epochs | Estimated Time |
-|---|---|---|
-| Local test (noiseless CPU) | 3 | ~27 minutes |
-| ARC real QPU (1024 shots) | 50 | ~8–24 hours |
-
-**Checkpoints are saved automatically every 10 epochs** to `checkpoint_ibm_epoch10.json`, `checkpoint_ibm_epoch20.json` etc. If the ARC job times out, results up to the last checkpoint are not lost.
+> Request **48 hours** in SLURM to be safe. Checkpoints saved every 10 epochs per feature count — progress is never fully lost if the job times out.
 
 ---
 
@@ -355,7 +373,7 @@ data/
 | Environment | Requirements |
 |---|---|
 | Local machine | Python 3.10, 16GB RAM recommended, CPU only |
-| ARC supercomputer | Python 3.10, 32GB RAM, IBM Quantum account |
+| ARC supercomputer | Python 3.10, 32GB RAM, IBM Quantum account, 48h job time |
 
 ---
 
