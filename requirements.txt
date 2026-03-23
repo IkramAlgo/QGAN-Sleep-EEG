@@ -1,29 +1,28 @@
-# QGAN Sleep EEG — Requirements
-# Install: pip install -r requirements.txt
-
 # Quantum
-pennylane>=0.40.0
-pennylane-qiskit>=0.40.0
-PennyLane_Lightning==0.40.0
+pennylane
+pennylane-qiskit
+PennyLane_Lightning
 
-# IBM Quantum
-qiskit==1.3.2
-qiskit-aer==0.15.1
-qiskit-ibm-runtime==0.29.0
-qiskit-ibm-provider==0.11.0
+# IBM Quantum (NEW stack)
+qiskit
+qiskit-aer
+qiskit-ibm-runtime
+
+# ❌ REMOVE THIS (causes conflicts)
+# qiskit-ibm-provider
 
 # Deep Learning
-torch==2.10.0
-torchvision==0.25.0
+torch
+torchvision
 
 # Data & EEG
-numpy==1.26.4
-pyEDFlib==0.1.42
-mne==1.11.0
-scipy==1.15.3
+numpy
+pyEDFlib
+mne
+scipy
 
 # ML Metrics
-scikit-learn==1.7.2
+scikit-learn
 
 # Plotting
-matplotlib==3.10.8
+matplotlib
