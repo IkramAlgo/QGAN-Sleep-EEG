@@ -38,7 +38,7 @@ SHOTS        = 512
 BATCH_SIZE   = 8
 LAMBDA_GP    = 10
 LOCAL_EPOCHS = 3
-ARC_EPOCHS   = 50
+ARC_EPOCHS   = 10
 
 
 def parse_args():
