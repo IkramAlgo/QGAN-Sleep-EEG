@@ -34,7 +34,7 @@ FEATURE_NAMES = {
 }
 N_QUBITS     = 6       # Arch C: always 6 qubits regardless of features
 N_LAYERS     = 2
-SHOTS        = 1024
+SHOTS        = 512
 BATCH_SIZE   = 8
 LAMBDA_GP    = 10
 LOCAL_EPOCHS = 3
