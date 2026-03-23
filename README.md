@@ -2,6 +2,8 @@
 
 A hybrid quantum-classical machine learning project applying **Quantum Generative Adversarial Networks (QGAN)** to generate synthetic sleep EEG data. Built with **PennyLane**, **PyTorch**, and **IBM Qiskit** for quantum noise simulation.
 
+> Submitted to **FORCE 2026 Conference**
+
 ---
 
 ## 🚀 What This Project Does
@@ -18,7 +20,7 @@ This project takes real human sleep EEG brain signal recordings and trains a Qua
 
 A Generator and a Discriminator compete against each other during training:
 
-- **Quantum Generator** — takes random noise as input, encodes it into a quantum circuit using rotation gates (RX, RY, RZ), entangles qubits using CNOT gates, and outputs fake EEG feature vectors via Pauli-Z measurements.
+- **Quantum Generator** — takes random noise as input, encodes it into a quantum circuit using RX rotation gates, entangles qubits using ring CNOT gates, and outputs fake EEG feature vectors via Pauli-Z measurements.
 - **Classical Discriminator** — a small MLP neural network (32→16→1) that scores whether its input looks real or fake. Classical discriminator replaces the original quantum discriminator which collapsed due to the barren plateau problem.
 
 They compete until the Generator produces data the Discriminator cannot distinguish from real sleep data.
@@ -46,7 +48,7 @@ Four quantum generator architectures were tested, each with both BCE and WGAN-GP
 
 | Property | Value |
 |---|---|
-| Source | Sleep-EDF dataset (PhysioNet) |
+| Source | Sleep-EDF dataset |
 | File | EPCTL03.edf |
 | Signal | EEG Fpz-Cz channel, human sleep recording |
 | Epochs | 843 × 30-second windows |
@@ -64,8 +66,6 @@ Four quantum generator architectures were tested, each with both BCE and WGAN-GP
 | Classical GAN (BCE) | **0.920** | **0.965** | **0.916** | 0.1611 | 0.2s |
 | HybridQGAN CPU-Sim (BCE) | 0.500 | 0.000 | 0.667 | **0.0797** | 67.6s |
 | HybridQGAN QPU-Sim (IBM) | 0.500 | 0.000 | 0.667 | 0.1149 | 1878s |
-
-**Finding:** Classical GAN wins classification. Quantum generator wins variance matching by 50% (StdMAE 0.0797 vs 0.1611). Complementary strengths confirmed on real biomedical data.
 
 ### Architecture Ablation — Full Results (4 Features)
 
@@ -99,7 +99,7 @@ WGAN-GP improves ring topology (+0.730 Specificity) but hurts all-to-all topolog
 Classical GAN Specificity under WGAN-GP: 0.965 → 0.340 (degrades). HybridQGAN Specificity under WGAN-GP: 0.000 → 0.730–0.955 (fixed). The quantum circuit's constrained parameterization prevents the mode collapse that destroys classical WGAN-GP training.
 
 **6. IBM Noise Does Not Eliminate Quantum Advantage**
-QPU-Sim using Fake127QPulseV1 noise model achieved StdMAE = 0.1149 — still better than Classical GAN (0.1611). Real quantum hardware training remains viable for biomedical EEG despite decoherence.
+QPU-Sim achieved StdMAE = 0.1149 — still better than Classical GAN (0.1611). Real quantum hardware training remains viable for biomedical EEG despite decoherence.
 
 ---
 
@@ -115,30 +115,30 @@ QGAN-Sleep-EEG/
 │   │
 │   ├── models.py                  # Arch A: Ring 4-qubit + ClassicalDiscriminator
 │   ├── models_arch.py             # Arch B, C, D variants
+│   ├── models_ibm.py              # Arch C for IBM QPU (parameter-shift gradient)
 │   │
-│   ├── train.py                   # Main training — Arch A BCE → results.json
+│   ├── train.py                   # Arch A BCE → results.json
 │   ├── train_wgan.py              # Arch A WGAN-GP → results_wgan.json
 │   ├── train_arch.py              # Arch B, C, D × BCE + WGAN-GP → results_arch_*.json
-│   ├── train_ibm.py               # QPU-Sim with IBM noise → results_ibm.json
+│   ├── train_ibm.py               # Arch C IBM QPU → results_ibm_qpu.json
 │   │
 │   ├── classical_baseline.py      # Classical GAN (generator + discriminator)
 │   │
 │   ├── plot.py                    # Figures for Arch A BCE results
 │   ├── plot_wgan.py               # Figures for WGAN-GP comparison
-│   ├── plot_arch.py               # Figures for architecture ablation
-│   │
-│   └── ibm_quantum_setup.py       # AerSimulator + Fake127QPulseV1 noise model
+│   └── plot_arch.py               # Figures for architecture ablation
 │
 ├── figures/                       # All generated paper figures
 ├── data/                          # Place EPCTL03.edf here (not included)
+├── ibm_quantum_setup.py           # One-time IBM credentials setup (do not push to GitHub)
 ├── results.json                   # Arch A BCE results
 ├── results_wgan.json              # Arch A WGAN-GP results
-├── results_ibm.json               # QPU-Sim IBM results
 ├── results_arch_B_bce.json        # Arch B BCE results
 ├── results_arch_B_wgan.json       # Arch B WGAN-GP results
 ├── results_arch_C_wgan.json       # Arch C WGAN-GP results (recommended)
 ├── results_arch_D_bce.json        # Arch D BCE results
 ├── results_arch_D_wgan.json       # Arch D WGAN-GP results
+├── results_ibm_qpu.json           # ARC QPU final results
 ├── requirements.txt
 └── README.md
 ```
@@ -149,17 +149,13 @@ QGAN-Sleep-EEG/
 
 | Component | Technology | Purpose |
 |---|---|---|
-| Quantum circuits | PennyLane | Build, run, and differentiate quantum circuits |
-| Hardware connection | Qiskit + AerSimulator | IBM 127-qubit noise model simulation |
+| Quantum circuits | PennyLane 0.39.0 | Build, run, and differentiate quantum circuits |
+| Hardware connection | Qiskit IBM Runtime 0.29.0 | Connect to real IBM QPU via IBM Cloud |
+| Noise simulation | Qiskit Aer 0.15.1 | Local IBM noise model for testing |
 | Bridge | pennylane-qiskit 0.39.0 | Runs PennyLane circuits on Qiskit backends |
-| Classical ML | PyTorch | Classical discriminator, optimizers, training loop |
+| Classical ML | PyTorch 2.10.0 | Classical discriminator, optimizers, training loop |
 | Data | pyEDFlib | Load Sleep EDF files |
 | Figures | matplotlib | Publication-quality paper figures |
-
-**How PennyLane and Qiskit work together:**
-- PennyLane defines and trains all quantum circuits
-- For CPU-Sim: `qml.device("default.qubit", wires=4)` — PennyLane's own fast simulator
-- For QPU-Sim: `qml.device("qiskit.aer", wires=4, backend=AerSimulator(noise_model=fake_backend))` — same PennyLane circuit, run on Qiskit's IBM noise simulator
 
 ---
 
@@ -171,40 +167,28 @@ git clone https://github.com/IkramAlgo/QGAN-Sleep-EEG.git
 cd QGAN-Sleep-EEG
 
 # 2. Create environment (Python 3.10 required)
-conda create -n qgan310 python=3.10
+conda create -n qgan310 python=3.10 -y
 conda activate qgan310
 
 # 3. Install dependencies
 pip install -r requirements.txt
 ```
 
-**Key dependencies:**
-```
-pennylane>=0.39.0
-pennylane-qiskit==0.39.0
-torch>=2.0
-qiskit-aer
-pyEDFlib
-matplotlib
-scikit-learn
-numpy
-```
-
 ---
 
-## ▶️ How to Run
+## ▶️ How to Run — Local Machine
 
 ```bash
-# Arch A baseline (BCE) — saves to results.json
+# Arch A baseline BCE — saves to results.json (~36 min)
 python -m qgan.train
 
-# Arch A with WGAN-GP — saves to results_wgan.json
+# Arch A WGAN-GP — saves to results_wgan.json
 python -m qgan.train_wgan
 
-# Arch B, C, D ablation (all 5 experiments) — saves to results_arch_*.json
+# Arch B, C, D ablation — saves to results_arch_*.json (~7 hours total)
 python -m qgan.train_arch
 
-# IBM QPU noise simulation — saves to results_ibm.json
+# IBM local test — 3 epochs, verifies code before ARC (~27 min)
 python -m qgan.train_ibm
 
 # Generate all figures
@@ -213,7 +197,131 @@ python -m qgan.plot_wgan
 python -m qgan.plot_arch
 ```
 
-> **CPU timing estimate:** Arch A = ~36 min for 50 epochs. Arch C = ~3.5 hours. QPU-Sim = ~26 hours. Always test new architectures on CPU first.
+---
+
+## 🖥️ How to Run on ARC Supercomputer (50 Epochs, Real QPU)
+
+### What ARC is used for
+
+All CPU experiments (Arch A, B, C, D) were run on a local machine. ARC is used only for the **real IBM QPU run** of Arch C + WGAN-GP with 50 epochs — the final paper result that demonstrates quantum hardware performance.
+
+### Prerequisites
+
+- IBM Cloud account with quantum computing access
+- IBM API key and CRN (from IBM Cloud dashboard)
+- ARC account with job submission access
+
+---
+
+### Step 1 — Set up IBM credentials locally
+
+Edit `ibm_quantum_setup.py` and add your IBM API key and CRN, then run:
+
+```bash
+python ibm_quantum_setup.py
+```
+
+This creates `ibm_credentials.txt` with your saved credentials.
+
+> ⚠️ **Never push `ibm_credentials.txt` or `ibm_quantum_setup.py` to GitHub.**
+
+---
+
+### Step 2 — Transfer files to ARC
+
+```bash
+# Transfer project folder (via GitHub clone is fine for code)
+ssh username@arc.university.edu
+git clone https://github.com/IkramAlgo/QGAN-Sleep-EEG.git
+
+# Transfer credentials and data SEPARATELY (not via GitHub)
+scp ibm_credentials.txt username@arc.university.edu:~/QGAN-Sleep-EEG/
+scp data/EPCTL03.edf    username@arc.university.edu:~/QGAN-Sleep-EEG/data/
+```
+
+---
+
+### Step 3 — Set up environment on ARC
+
+```bash
+ssh username@arc.university.edu
+cd ~/QGAN-Sleep-EEG
+
+conda create -n qgan310 python=3.10 -y
+conda activate qgan310
+pip install -r requirements.txt
+```
+
+---
+
+### Step 4 — Test first (3 epochs, no QPU)
+
+```bash
+python -m qgan.train_ibm
+```
+
+Expected output — if you see this with no errors, code is ready:
+```
+Epoch [  1/  3] G:... C:... MeanMAE:... StdMAE:... Time:...s
+Epoch [  2/  3] ...
+Epoch [  3/  3] ...
+Saved: results_ibm_noise_sim.json
+```
+
+---
+
+### Step 5 — Submit full QPU job (50 epochs)
+
+**Option A — Direct run:**
+```bash
+python -m qgan.train_ibm --arc
+```
+
+**Option B — SLURM submission (recommended):**
+
+Create `run_arc.sh`:
+```bash
+#!/bin/bash
+#SBATCH --job-name=qgan_arch_c
+#SBATCH --output=qgan_%j.log
+#SBATCH --error=qgan_%j.err
+#SBATCH --time=24:00:00
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=8
+#SBATCH --mem=32G
+
+source ~/miniconda3/bin/activate qgan310
+cd ~/QGAN-Sleep-EEG
+python -m qgan.train_ibm --arc
+```
+
+Submit and monitor:
+```bash
+sbatch run_arc.sh
+squeue -u $USER
+tail -f qgan_<JOBID>.log
+```
+
+---
+
+### Step 6 — Retrieve results
+
+```bash
+scp username@arc.university.edu:~/QGAN-Sleep-EEG/results_ibm_qpu.json ./
+scp username@arc.university.edu:~/QGAN-Sleep-EEG/checkpoint_ibm_epoch*.json ./
+```
+
+---
+
+### ARC Timing and Safety
+
+| Mode | Epochs | Estimated Time |
+|---|---|---|
+| Local test (noiseless CPU) | 3 | ~27 minutes |
+| ARC real QPU (1024 shots) | 50 | ~8–24 hours |
+
+**Checkpoints are saved automatically every 10 epochs** to `checkpoint_ibm_epoch10.json`, `checkpoint_ibm_epoch20.json` etc. If the ARC job times out, results up to the last checkpoint are not lost.
 
 ---
 
@@ -232,18 +340,30 @@ python -m qgan.plot_arch
 
 ---
 
+## 🔒 Security — Add to .gitignore
+
+```
+ibm_credentials.txt
+ibm_quantum_setup.py
+ibm_backend.txt
+checkpoint_*.json
+data/
+```
+
+---
+
 ## ⚡ System Requirements
 
-- Python 3.10
-- Windows / Linux / macOS
-- CPU only for all experiments (GPU not required)
-- RAM: 8GB minimum, 16GB recommended for Arch C
-- Storage: ~500MB for EDF file + results
+| Environment | Requirements |
+|---|---|
+| Local machine | Python 3.10, 16GB RAM recommended, CPU only |
+| ARC supercomputer | Python 3.10, 32GB RAM, IBM Quantum account |
 
 ---
 
 ## 📜 Acknowledgments
 
-- Original QGAN framework by Reece Colton Dixon
+- Original QGAN framework by Reece Colton Dixon (github.com/QuantaScriptor/QGAN_Project)
 - Sleep-EDF dataset from https://osf.io/r26fh/overview
-- IBM quantum noise model via Qiskit Fake127QPulseV1
+- IBM quantum hardware via IBM Cloud Quantum Computing
+- Extended and applied to Sleep EEG domain for FORCE 2026 conference submission
