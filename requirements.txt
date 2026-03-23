@@ -2,8 +2,8 @@
 # Install: pip install -r requirements.txt
 
 # Quantum
-pennylane==0.39.0
-pennylane-qiskit==0.39.0
+pennylane>=0.40.0
+pennylane-qiskit>=0.40.0
 PennyLane_Lightning==0.40.0
 
 # IBM Quantum
