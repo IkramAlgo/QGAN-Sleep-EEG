@@ -26,19 +26,19 @@ from qgan.data_loader import load_sleep_edf
 from qgan.models_ibm  import GeneratorArchC, ClassicalDiscriminator
 
 #  CONFIG
-FEATURE_SWEEP = [2, 3, 4]   # run experiments for each feature count
+FEATURE_SWEEP = [2]#[2, 3, 4]   # run experiments for each feature count
 FEATURE_NAMES = {
     2: ["Mean", "Std Dev"],
-    3: ["Mean", "Std Dev", "Min"],
-    4: ["Mean", "Std Dev", "Min", "Max"],
+    #3: ["Mean", "Std Dev", "Min"],
+    #4: ["Mean", "Std Dev", "Min", "Max"],
 }
 N_QUBITS     = 6       # Arch C: always 6 qubits regardless of features
 N_LAYERS     = 2
-SHOTS        = 512
+SHOTS        = 64#512
 BATCH_SIZE   = 8
 LAMBDA_GP    = 10
 LOCAL_EPOCHS = 3
-ARC_EPOCHS   = 10
+ARC_EPOCHS   = 3#10
 
 
 def parse_args():
