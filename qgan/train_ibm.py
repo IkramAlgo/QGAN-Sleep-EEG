@@ -1,14 +1,16 @@
 # qgan/train_ibm.py
-# QGAN Arch C on IBM QPU — Feature Sweep [2, 3, 4]
+# QGAN Arch C — ARC Simulator Version
+# Uses AerSimulator + custom depolarizing noise (no real QPU required)
+#
 # LOCAL TEST : python -m qgan.train_ibm           (3 epochs, noise sim)
-# ARC RUN    : python -m qgan.train_ibm --arc      (50 epochs, real QPU)
+# ARC RUN    : python -m qgan.train_ibm --arc      (50 epochs, noise sim)
 #
 # Runs experiment for each feature count: 2, 3, 4
 # Saves one JSON per feature count + one combined results file
 #
 # Prerequisites:
-#   1. Run ibm_quantum_setup.py once to save credentials
-#   2. ibm_credentials.txt must exist in project root
+#   pip install pennylane pennylane-qiskit qiskit-aer torch scikit-learn
+#   ibm_credentials.txt is NOT needed — no QPU calls are made.
 
 import os
 import copy
@@ -25,31 +27,38 @@ from qgan.config      import LEARNING_RATE, GRAD_CLIP
 from qgan.data_loader import load_sleep_edf
 from qgan.models_ibm  import GeneratorArchC, ClassicalDiscriminator
 
+# ----------------------------------------------------------------
 #  CONFIG
-FEATURE_SWEEP = [2]#[2, 3, 4]   # run experiments for each feature count
+# ----------------------------------------------------------------
+FEATURE_SWEEP = [2, 3, 4]
 FEATURE_NAMES = {
     2: ["Mean", "Std Dev"],
-    #3: ["Mean", "Std Dev", "Min"],
-    #4: ["Mean", "Std Dev", "Min", "Max"],
+    3: ["Mean", "Std Dev", "Min"],
+    4: ["Mean", "Std Dev", "Min", "Max"],
 }
 N_QUBITS     = 6       # Arch C: always 6 qubits regardless of features
 N_LAYERS     = 2
-SHOTS        = 64#512
+SHOTS        = 512     # shots for noise sim (increase for lower variance) 1024
 BATCH_SIZE   = 8
 LAMBDA_GP    = 10
-LOCAL_EPOCHS = 3
-ARC_EPOCHS   = 3#10
+LOCAL_EPOCHS = 3       # quick sanity-check run
+ARC_EPOCHS   = 50      # full ARC run on noise simulator
 
 
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--arc", action="store_true",
-                        help="Run on real QPU with 50 epochs (ARC mode)")
-    parser.add_argument("--shots", type=int, default=SHOTS)
+    parser.add_argument(
+        "--arc", action="store_true",
+        help="ARC mode: 50 epochs on AerSimulator+depolarizing noise"
+    )
+    parser.add_argument("--shots", type=int, default=SHOTS,
+                        help="Number of shots per circuit evaluation")
     return parser.parse_args()
 
 
+# ----------------------------------------------------------------
 #  WGAN-GP GRADIENT PENALTY
+# ----------------------------------------------------------------
 def gradient_penalty(disc, real, fake):
     bs    = real.size(0)
     alpha = torch.rand(bs, 1).float().expand(real.size())
@@ -64,7 +73,9 @@ def gradient_penalty(disc, real, fake):
     return ((grads.norm(2, dim=1) - 1) ** 2).mean()
 
 
+# ----------------------------------------------------------------
 #  METRICS
+# ----------------------------------------------------------------
 def compute_mae(generator, data, n_features):
     generator.eval()
     with torch.no_grad():
@@ -96,7 +107,7 @@ def compute_clf(generator, disc, data, n_features):
         fs = disc(fake).squeeze()
 
     scores = torch.cat([rs, fs]).detach().numpy()
-    labels = np.array([1]*n + [0]*n)
+    labels = np.array([1] * n + [0] * n)
     preds  = (scores > 0.0).astype(int)    # WGAN-GP threshold = 0
 
     tn, fp, fn, tp = confusion_matrix(labels, preds, labels=[0, 1]).ravel()
@@ -110,7 +121,9 @@ def compute_clf(generator, disc, data, n_features):
     }
 
 
+# ----------------------------------------------------------------
 #  TRAINING LOOP
+# ----------------------------------------------------------------
 def train(generator, disc, loader, data, n_features, n_epochs):
     opt_g = torch.optim.Adam(generator.parameters(),
                               lr=LEARNING_RATE,       betas=(0.0, 0.9))
@@ -198,38 +211,38 @@ def train(generator, disc, loader, data, n_features, n_epochs):
 
 
 def _checkpoint(history, n_features, epoch):
-    path = f"checkpoint_ibm_feat{n_features}_epoch{epoch}.json"
+    path = f"checkpoint_sim_feat{n_features}_epoch{epoch}.json"
     with open(path, "w") as f:
         json.dump({"n_features": n_features,
                    "epoch": epoch, "history": history}, f, indent=2)
     print(f"    [Checkpoint saved: {path}]")
 
 
+# ----------------------------------------------------------------
 #  MAIN
+# ----------------------------------------------------------------
 def main():
     args = parse_args()
 
     if args.arc:
         n_epochs     = ARC_EPOCHS
-        use_real_qpu = True
-        out_file     = "results_ibm_qpu.json"
-        mode_label   = "ARC — Real IBM QPU"
+        out_file     = "results_sim_arc.json"
+        mode_label   = "ARC — AerSimulator + Custom Depolarizing Noise"
     else:
         n_epochs     = LOCAL_EPOCHS
-        use_real_qpu = False
-        out_file     = "results_ibm_local.json"
-        mode_label   = "LOCAL TEST — Noise Simulator"
+        out_file     = "results_sim_local.json"
+        mode_label   = "LOCAL TEST — AerSimulator + Custom Depolarizing Noise"
 
     print(f"\n  {'='*62}")
-    print(f"  QGAN Arch C | IBM QPU | Feature Sweep {FEATURE_SWEEP}")
+    print(f"  QGAN Arch C | Noise Simulator | Feature Sweep {FEATURE_SWEEP}")
     print(f"  Mode    : {mode_label}")
     print(f"  Epochs  : {n_epochs} per feature count")
     print(f"  Shots   : {args.shots}")
+    print(f"  Noise   : Depolarizing + Thermal Relaxation (custom)")
     print(f"  {'='*62}")
 
     # Load full data once — slice features per experiment
     all_data = load_sleep_edf()
-
     all_results = {}
 
     for n_features in FEATURE_SWEEP:
@@ -246,12 +259,16 @@ def main():
 
         # Build fresh models for each feature count
         print("  Building models...")
-        generator = GeneratorArchC(n_qubits=N_QUBITS, n_layers=N_LAYERS,
-                                   shots=args.shots, use_real_qpu=use_real_qpu)
-        disc      = ClassicalDiscriminator(input_dim=N_QUBITS)
+        generator = GeneratorArchC(
+            n_qubits=N_QUBITS, n_layers=N_LAYERS,
+            shots=args.shots,
+            use_real_qpu=False        # always False — simulator only
+        )
+        disc = ClassicalDiscriminator(input_dim=N_QUBITS)
 
         print(f"  Device: {generator.device_label}")
-        print(f"  Architecture: {N_QUBITS} qubits | ring CNOT | RX->CNOT->RY | WGAN-GP\n")
+        print(f"  Architecture: {N_QUBITS} qubits | ring CNOT | "
+              f"RX->CNOT->RY | WGAN-GP\n")
 
         # Train
         history, generator, disc = train(
@@ -275,12 +292,13 @@ def main():
             "shots":         args.shots,
             "epochs":        n_epochs,
             "device":        generator.device_label,
+            "noise_model":   "custom_depolarizing+thermal_relaxation",
             "history":       history,
             "mae":           mae,
             "clf":           clf,
         }
 
-        # Save per-feature result immediately — do not lose it
+        # Save per-feature result immediately — do not lose it on ARC
         per_file = out_file.replace(".json", f"_{n_features}f.json")
         with open(per_file, "w") as f:
             json.dump(all_results[f"{n_features}_features"], f, indent=2)

@@ -1,119 +1,111 @@
 # qgan/models_ibm.py
 # QGAN Arch C — 6 qubits, ring CNOT, RX->CNOT->RY
-# Matches CPU Arch C exactly. Uses parameter-shift for QPU compatibility.
-# Credentials read from ibm_credentials.txt (written by ibm_quantum_setup.py)
+# ARC VERSION: AerSimulator + custom depolarizing noise (no real QPU)
+# Credentials file is NOT required — all IBM QPU logic removed.
 
-import os
 import torch
 import warnings
 import pennylane as qml
 from qgan.config import N_LAYERS, WEIGHT_INIT_STD
 
 
-def _run_circuit(circuit, x, weights):
-    out = circuit(x, weights)
-    return torch.stack(out) if isinstance(out, (list, tuple)) else out
+# ================================================================
+#  DEVICE FACTORY
+#  Always returns AerSimulator with custom depolarizing noise.
+#  use_real_qpu parameter is kept for API compatibility but ignored.
+# ================================================================
+
+# --- Noise parameters (tune as needed) ---
+DEPOL_1Q = 1e-3   # single-qubit depolarizing error rate
+DEPOL_2Q = 5e-3   # two-qubit (CNOT) depolarizing error rate
+T1       = 50e-6  # T1 relaxation time  (seconds)
+T2       = 70e-6  # T2 dephasing time   (seconds)
+GATE_1Q  = 50e-9  # single-qubit gate time (seconds)
+GATE_2Q  = 300e-9 # two-qubit gate time    (seconds)
 
 
-def _read_credentials():
-    """Read IBM credentials from ibm_credentials.txt"""
-    creds = {}
-    try:
-        with open("ibm_credentials.txt", "r") as f:
-            for line in f:
-                line = line.strip()
-                if "=" in line:
-                    k, v = line.split("=", 1)
-                    creds[k.strip()] = v.strip()
-    except FileNotFoundError:
-        print("  WARNING: ibm_credentials.txt not found.")
-        print("  Run ibm_quantum_setup.py first.")
-    return creds
+def _build_noise_model(n_qubits):
+    """
+    Build a custom depolarizing + thermal relaxation noise model.
+    Applied to every qubit and every gate in the circuit.
+    """
+    from qiskit_aer.noise import (
+        NoiseModel, depolarizing_error, thermal_relaxation_error
+    )
+
+    noise_model = NoiseModel()
+
+    for qubit in range(n_qubits):
+        # --- single-qubit gate noise (rx, ry, u1, u2, u3) ---
+        dep_1q    = depolarizing_error(DEPOL_1Q, 1)
+        therm_1q  = thermal_relaxation_error(T1, T2, GATE_1Q)
+        combined_1q = dep_1q.compose(therm_1q)
+        noise_model.add_quantum_error(
+            combined_1q,
+            ["rx", "ry", "rz", "h", "u1", "u2", "u3"],
+            [qubit]
+        )
+
+    # --- two-qubit gate noise (cx / CNOT) ---
+    dep_2q = depolarizing_error(DEPOL_2Q, 2)
+    for ctrl in range(n_qubits):
+        tgt = (ctrl + 1) % n_qubits   # ring topology
+        therm_ctrl = thermal_relaxation_error(T1, T2, GATE_2Q)
+        therm_tgt  = thermal_relaxation_error(T1, T2, GATE_2Q)
+        combined_2q = dep_2q.expand(therm_ctrl.tensor(therm_tgt))
+        noise_model.add_quantum_error(combined_2q, ["cx"], [ctrl, tgt])
+
+    return noise_model
 
 
 def get_ibm_device(n_qubits, shots=1024, use_real_qpu=False):
     """
-    Get quantum device.
-    use_real_qpu=False  -> Fake127QPulseV1 noise simulation (local test)
-    use_real_qpu=True   -> Real IBM QPU via ibm_cloud credentials
+    Returns (PennyLane device, label string).
+
+    ARC mode: always AerSimulator + custom depolarizing noise.
+    use_real_qpu is accepted for API compatibility but has no effect.
     """
-
     if use_real_qpu:
-        try:
-            from qiskit_ibm_runtime import QiskitRuntimeService
+        print("  NOTE: use_real_qpu=True ignored — ARC version uses "
+              "AerSimulator + custom depolarizing noise.")
 
-            creds = _read_credentials()
-            api_key = creds.get("api_key") or os.environ.get("IBM_QUANTUM_TOKEN")
-            crn     = creds.get("crn")     or os.environ.get("IBM_QUANTUM_CRN")
-            backend_name = creds.get("backend", "ibm_torino")
+    try:
+        from qiskit_aer import AerSimulator
 
-            if not api_key:
-                print("  WARNING: No IBM API key found — falling back to noise sim")
-                return get_ibm_device(n_qubits, shots, use_real_qpu=False)
+        noise_model = _build_noise_model(n_qubits)
 
-            service = QiskitRuntimeService(
-                channel="ibm_cloud",
-                token=api_key,
-                instance=crn
+        # AerSimulator statevector backend with noise injection
+        backend = AerSimulator(noise_model=noise_model)
+
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            dev = qml.device(
+                "qiskit.aer",
+                wires=n_qubits,
+                backend=backend,
+                shots=shots,
             )
 
-            backend = service.backend(backend_name)
-            print(f"  QPU: {backend.name}")
+        label = (
+            f"AerSimulator+DepolarNoise "
+            f"(1q={DEPOL_1Q:.0e}, 2q={DEPOL_2Q:.0e}, shots={shots})"
+        )
+        print(f"  Device : {label}")
+        return dev, label
 
-            try:
-                pending = backend.status().pending_jobs
-                print(f"  Queue: {pending} pending jobs")
-            except Exception:
-                pass
-
-            dev   = qml.device("qiskit.remote", wires=n_qubits,
-                               backend=backend, shots=shots)
-            label = f"RealQPU ({backend.name}, {shots} shots)"
-            return dev, label
-
-        except Exception as e:
-            print(f"  WARNING: Real QPU failed ({e})")
-            print(f"  Falling back to noise simulation")
-            return get_ibm_device(n_qubits, shots, use_real_qpu=False)
-
-    else:
-        # Fake127QPulseV1 noise simulation — works immediately, no credentials
-        try:
-            from qiskit_aer import AerSimulator
-            from qiskit_aer.noise import NoiseModel
-
-            # Fake127QPulseV1 is 127 qubits — too large for local RAM (MemoryError)
-            # FakeNairobi = 7 qubits, same IBM noise characteristics, fits in memory
-            # On ARC (real QPU) this branch is never reached anyway
-            with warnings.catch_warnings():
-                warnings.simplefilter("ignore")
-                try:
-                    from qiskit.providers.fake_provider import FakeNairobi
-                    fake_backend = FakeNairobi()
-                    label_name   = "FakeNairobi 7-qubit"
-                except ImportError:
-                    from qiskit.providers.fake_provider import FakeMontreal
-                    fake_backend = FakeMontreal()
-                    label_name   = "FakeMontreal 27-qubit"
-                noise_model = NoiseModel.from_backend(fake_backend)
-
-            dev   = qml.device("qiskit.aer", wires=n_qubits,
-                               noise_model=noise_model, shots=shots)
-            label = f"NoiseSim {label_name} ({shots} shots)"
-            print(f"  Device: {label}")
-            return dev, label
-
-        except Exception as e:
-            print(f"  WARNING: Noise sim failed ({e}) — using noiseless CPU")
-            dev   = qml.device("default.qubit", wires=n_qubits)
-            label = "CPU-Sim (noiseless fallback)"
-            return dev, label
+    except Exception as e:
+        # Graceful fallback so the job does not crash on ARC
+        print(f"  WARNING: AerSimulator failed ({e})")
+        print(f"  Falling back to PennyLane default.qubit (noiseless).")
+        dev   = qml.device("default.qubit", wires=n_qubits)
+        label = "default.qubit (noiseless fallback)"
+        return dev, label
 
 
 # ================================================================
 #  ARCH C GENERATOR
 #  6 qubits | ring CNOT | RX encoding | RY trainable | 2 layers
-#  Identical to CPU Arch C — only diff is parameter-shift gradient
+#  diff_method="parameter-shift" — compatible with all Aer backends
 # ================================================================
 class GeneratorArchC(torch.nn.Module):
 
@@ -134,18 +126,18 @@ class GeneratorArchC(torch.nn.Module):
 
         @qml.qnode(self.dev, interface="torch", diff_method="parameter-shift")
         def circuit(inputs, weights):
-            # Step 1: RX encoding
-            # First 4 inputs = EEG features, qubits 4 and 5 get zero
+            # Step 1 — RX encoding
+            # First n_features inputs = EEG features; extra qubits get 0
             for w in range(n_qubits):
                 angle = inputs[w] if w < len(inputs) else torch.tensor(0.0)
                 qml.RX(angle, wires=w)
 
-            # Step 2: For each layer — ring CNOT then RY trainable
+            # Step 2 — Layers: ring CNOT then RY trainable weights
             for l in range(n_layers):
                 # Ring CNOT: 0->1->2->3->4->5->0
                 for w in range(n_qubits):
                     qml.CNOT(wires=[w, (w + 1) % n_qubits])
-                # RY trainable weights
+                # RY trainable
                 for w in range(n_qubits):
                     qml.RY(weights[l, w], wires=w)
 
@@ -157,7 +149,7 @@ class GeneratorArchC(torch.nn.Module):
         x = x.float()
 
         def _run(xi):
-            # Pad from 4 features to 6 qubits
+            # Pad input from n_features to n_qubits
             if xi.shape[0] < self.n_qubits:
                 pad = torch.zeros(self.n_qubits - xi.shape[0])
                 xi  = torch.cat([xi, pad])
@@ -185,7 +177,7 @@ class ClassicalDiscriminator(torch.nn.Module):
             torch.nn.Linear(32, 16),
             torch.nn.LeakyReLU(0.2),
             torch.nn.Linear(16, 1),
-            # NO Sigmoid
+            # NO Sigmoid — WGAN-GP raw scores
         )
 
     def forward(self, x):
