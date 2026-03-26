@@ -1,22 +1,23 @@
 # qgan/models_ibm.py
 # QGAN Arch C — 6 qubits, ring CNOT, RX->CNOT->RY
 #
-# NOISE STRATEGY (3 layers):
-#   Layer 1 — DATA-LEVEL NOISE   : Gaussian noise injected into RX encoding
-#                                   angles before they enter the circuit.
-#                                   Simulates EEG sensor noise + ADC jitter.
-#   Layer 2 — CIRCUIT-LEVEL NOISE: Explicit Pauli X/Y/Z errors inserted after
-#                                   every gate inside the QNode via PennyLane's
-#                                   qml.PauliError (no Qiskit required).
-#   Layer 3 — HARDWARE NOISE     : AerSimulator + depolarizing + thermal
-#                                   relaxation (used when available; graceful
-#                                   fallback to default.qubit if Aer fails).
+# NOISE STRATEGY (2 guaranteed layers + 1 optional):
 #
-# This matches the pattern:
-#   if images[-1][i] == 0:
-#       images[-1][i] = algorithm_globals.random.uniform(0, np.pi/4)
-# …but generalised to continuous Gaussian corruption on all angles,
-# plus explicit mid-circuit Pauli noise channels.
+#   Layer 1 — DATA-LEVEL NOISE (always active, no backend dependency)
+#             Gaussian jitter on RX encoding angles during training.
+#             Zero-valued angles get Uniform(0, π/4) replacement.
+#             Simulates EEG sensor noise + ADC quantisation error.
+#
+#   Layer 2 — CIRCUIT-LEVEL BIT-FLIP NOISE (always active)
+#             After each gate, with probability p, a random Pauli
+#             (X, Y, or Z) is applied via standard RZ/RX/RY rotations
+#             (π-rotation = Pauli gate). Works on every PennyLane
+#             backend including default.qubit — no channel ops needed.
+#
+#   Layer 3 — AERSIMULATOR HARDWARE NOISE (optional, best-effort)
+#             Depolarizing + thermal relaxation noise model.
+#             Used when qiskit-aer is available; graceful fallback
+#             to default.qubit (Layers 1+2 remain active either way).
 
 import torch
 import warnings
@@ -26,19 +27,19 @@ from qgan.config import N_LAYERS, WEIGHT_INIT_STD
 
 
 # ================================================================
-#  NOISE PARAMETERS  — tune all three layers independently
+#  NOISE PARAMETERS
 # ================================================================
 
-# --- Layer 1: Data-level encoding noise (Gaussian, radians) ---
-ENCODING_NOISE_STD = 0.15        # σ for RX angle corruption (~8.6° std dev)
-ZERO_ANGLE_NOISE   = np.pi / 4   # max uniform noise when angle ≈ 0
-ZERO_THRESH        = 1e-3        # threshold to treat an angle as "zero"
+# Layer 1 — data-level encoding noise
+ENCODING_NOISE_STD = 0.15        # Gaussian σ on RX angles (radians)
+ZERO_ANGLE_NOISE   = np.pi / 4   # uniform upper bound for zero angles
+ZERO_THRESH        = 1e-3        # threshold to treat angle as "zero"
 
-# --- Layer 2: Circuit-level Pauli noise ---
-PAULI_ERROR_PROB_1Q = 0.01       # error probability after each 1-qubit gate
-PAULI_ERROR_PROB_2Q = 0.03       # error probability after each CNOT
+# Layer 2 — circuit-level gate noise probability
+PAULI_NOISE_1Q = 0.01            # prob of random Pauli after 1-qubit gate
+PAULI_NOISE_2Q = 0.03            # prob of random Pauli after CNOT (per qubit)
 
-# --- Layer 3: AerSimulator hardware noise ---
+# Layer 3 — AerSimulator hardware noise
 DEPOL_1Q = 1e-3
 DEPOL_2Q = 5e-3
 T1       = 50e-6
@@ -48,54 +49,76 @@ GATE_2Q  = 300e-9
 
 
 # ================================================================
-#  LAYER 1 HELPER — DATA-LEVEL NOISE
-#  Mirrors the example pattern:
-#    if images[-1][i] == 0:
-#        images[-1][i] = uniform(0, pi/4)
-#  Extended: all non-zero angles also get Gaussian jitter.
+#  LAYER 1 — DATA-LEVEL NOISE
 # ================================================================
 def inject_encoding_noise(angles: torch.Tensor, training: bool) -> torch.Tensor:
     """
     Corrupt RX encoding angles to simulate EEG sensor + ADC noise.
 
-    Rules (applied per element):
-      • If |angle| < ZERO_THRESH  → replace with Uniform(0, π/4)
-        (exact replica of the example pattern for zero-valued features)
-      • Otherwise                 → add Gaussian(0, ENCODING_NOISE_STD)
+    - |angle| < ZERO_THRESH  -> replace with Uniform(0, pi/4)
+      (mirrors: if images[-1][i] == 0: images[-1][i] = uniform(0, pi/4))
+    - otherwise               -> add Gaussian(0, ENCODING_NOISE_STD)
 
-    Only active during training so evaluation is deterministic.
+    Only active during training; eval is deterministic.
     """
     if not training:
         return angles
 
     noisy = angles.clone()
     flat  = noisy.view(-1)
-
     for i in range(flat.shape[0]):
         val = flat[i].item()
         if abs(val) < ZERO_THRESH:
-            # Zero-angle noise: uniform in [0, π/4]  (same as example)
             flat[i] = float(np.random.uniform(0, ZERO_ANGLE_NOISE))
         else:
-            # Non-zero angle: Gaussian jitter
             flat[i] = val + float(np.random.normal(0, ENCODING_NOISE_STD))
-
     return noisy.view(angles.shape)
 
 
 # ================================================================
-#  LAYER 3 HELPER — AERSIMULATOR NOISE MODEL
-#  Fixed: thermal relaxation on cx uses expand(2) to produce a
-#  proper 2-qubit error — avoids the "1-qubit error on 2-qubit
-#  instruction" crash that caused the fallback in earlier versions.
+#  LAYER 2 — CIRCUIT-LEVEL GATE NOISE
+#  Uses only standard rotation gates (RZ, RX, RY) so it works on
+#  every PennyLane backend — no channel/mixed-state simulator needed.
+#
+#  A pi-rotation is equivalent to the corresponding Pauli gate:
+#    RZ(pi) = iZ,  RX(pi) = iX,  RY(pi) = iY  (global phase ignored)
+#
+#  We pick one of {X, Y, Z} uniformly at random and apply it
+#  with probability p during training only.
+# ================================================================
+def apply_pauli_noise(wire: int, prob: float, training: bool):
+    """
+    With probability `prob`, apply a random Pauli {X, Y, Z} to `wire`
+    using pi-rotation gates. No-op during eval.
+    """
+    if not training:
+        return
+    if np.random.random() < prob:
+        choice = np.random.randint(0, 3)
+        if choice == 0:
+            qml.RX(np.pi, wires=wire)   # equivalent to Pauli X
+        elif choice == 1:
+            qml.RY(np.pi, wires=wire)   # equivalent to Pauli Y
+        else:
+            qml.RZ(np.pi, wires=wire)   # equivalent to Pauli Z
+
+
+# ================================================================
+#  LAYER 3 — AERSIMULATOR NOISE MODEL
 # ================================================================
 def _build_noise_model(n_qubits):
+    """
+    Depolarizing + thermal relaxation noise model.
+    Uses tensor() to combine two 1-qubit thermal errors into a
+    2-qubit error for cx — compatible with older qiskit-aer versions
+    that do not support .expand().
+    """
     from qiskit_aer.noise import (
         NoiseModel, depolarizing_error, thermal_relaxation_error
     )
     noise_model = NoiseModel()
 
-    # Single-qubit gate noise (compose = depolarizing then thermal)
+    # Single-qubit gate noise
     for qubit in range(n_qubits):
         dep_1q      = depolarizing_error(DEPOL_1Q, 1)
         therm_1q    = thermal_relaxation_error(T1, T2, GATE_1Q)
@@ -106,33 +129,31 @@ def _build_noise_model(n_qubits):
             [qubit]
         )
 
-    # 2-qubit depolarizing on each ring pair
+    # Two-qubit depolarizing on each ring pair
     dep_2q = depolarizing_error(DEPOL_2Q, 2)
     for ctrl in range(n_qubits):
         tgt = (ctrl + 1) % n_qubits
         noise_model.add_quantum_error(dep_2q, ["cx"], [ctrl, tgt])
 
-    # Thermal relaxation on cx — expand(2) makes it a valid 2-qubit error ✓
-    therm_2q   = thermal_relaxation_error(T1, T2, GATE_2Q)
-    therm_2q_2 = therm_2q.expand(2)
+    # Thermal relaxation on cx:
+    # tensor() two independent 1-qubit errors -> valid 2-qubit error
+    # Avoids .expand() incompatibility on older qiskit-aer versions.
+    therm_2q           = thermal_relaxation_error(T1, T2, GATE_2Q)
+    therm_2q_tensored  = therm_2q.tensor(therm_2q)   # 2-qubit error
     for ctrl in range(n_qubits):
         tgt = (ctrl + 1) % n_qubits
-        noise_model.add_quantum_error(therm_2q_2, ["cx"], [ctrl, tgt])
+        noise_model.add_quantum_error(therm_2q_tensored, ["cx"], [ctrl, tgt])
 
     return noise_model
 
 
 def get_ibm_device(n_qubits, shots=1024, use_real_qpu=False):
-    """
-    Returns (PennyLane device, label string).
-    Tries AerSimulator + custom noise first; falls back to default.qubit.
-    """
+    """Returns (PennyLane device, label string)."""
     if use_real_qpu:
         print("  NOTE: use_real_qpu=True ignored — simulator-only version.")
 
     try:
         from qiskit_aer import AerSimulator
-
         noise_model = _build_noise_model(n_qubits)
         backend     = AerSimulator(noise_model=noise_model)
 
@@ -148,8 +169,8 @@ def get_ibm_device(n_qubits, shots=1024, use_real_qpu=False):
         label = (
             f"AerSimulator+DepolarNoise+Thermal "
             f"(1q={DEPOL_1Q:.0e}, 2q={DEPOL_2Q:.0e}, shots={shots}) "
-            f"+ DataNoise(σ={ENCODING_NOISE_STD}) "
-            f"+ PauliNoise(1q={PAULI_ERROR_PROB_1Q}, 2q={PAULI_ERROR_PROB_2Q})"
+            f"+ DataNoise(sigma={ENCODING_NOISE_STD}) "
+            f"+ CircuitNoise(p1q={PAULI_NOISE_1Q}, p2q={PAULI_NOISE_2Q})"
         )
         print(f"  Device : {label}")
         return dev, label
@@ -157,12 +178,12 @@ def get_ibm_device(n_qubits, shots=1024, use_real_qpu=False):
     except Exception as e:
         print(f"  WARNING: AerSimulator failed ({e})")
         print(f"  Falling back to default.qubit — "
-              f"Layer 1 (data noise) + Layer 2 (Pauli noise) still active.")
+              f"Layer 1 (data noise) + Layer 2 (circuit noise) still active.")
         dev   = qml.device("default.qubit", wires=n_qubits, shots=shots)
         label = (
             f"default.qubit+shots={shots} "
-            f"+ DataNoise(σ={ENCODING_NOISE_STD}) "
-            f"+ PauliNoise(1q={PAULI_ERROR_PROB_1Q}, 2q={PAULI_ERROR_PROB_2Q})"
+            f"+ DataNoise(sigma={ENCODING_NOISE_STD}) "
+            f"+ CircuitNoise(p1q={PAULI_NOISE_1Q}, p2q={PAULI_NOISE_2Q})"
         )
         return dev, label
 
@@ -170,95 +191,78 @@ def get_ibm_device(n_qubits, shots=1024, use_real_qpu=False):
 # ================================================================
 #  ARCH C GENERATOR
 #  6 qubits | ring CNOT | RX encoding | RY trainable | 2 layers
-#
-#  NOISE INSIDE THE CIRCUIT (Layer 2):
-#    After every RX  → qml.PauliError with PAULI_ERROR_PROB_1Q
-#    After every CNOT → qml.PauliError with PAULI_ERROR_PROB_2Q
-#    After every RY  → qml.PauliError with PAULI_ERROR_PROB_1Q
-#
-#  qml.PauliError applies a random Pauli (X, Y, or Z) with the
-#  given probability — this is the circuit-level equivalent of the
-#  "inject random values" pattern from the example.
 # ================================================================
 class GeneratorArchC(torch.nn.Module):
 
     def __init__(self, n_qubits=6, n_layers=N_LAYERS,
                  shots=1024, use_real_qpu=False):
         super().__init__()
-        self.n_qubits  = n_qubits
-        self.n_layers  = n_layers
-        self.training_ = True   # separate flag to avoid nn.Module clash
+        self.n_qubits    = n_qubits
+        self.n_layers    = n_layers
+        self.is_training = True   # separate flag; avoids nn.Module.training clash
 
         self.dev, self.device_label = get_ibm_device(
             n_qubits, shots, use_real_qpu
         )
 
-        # [n_layers, n_qubits] — one RY per qubit per layer
         self.weights = torch.nn.Parameter(
             torch.randn(n_layers, n_qubits) * WEIGHT_INIT_STD
         )
 
-        n_q           = n_qubits
-        p1            = PAULI_ERROR_PROB_1Q
-        p2            = PAULI_ERROR_PROB_2Q
+        n_q   = n_qubits
+        n_lay = n_layers
+
+        # NOTE: apply_pauli_noise uses np.random at Python trace time,
+        # so each forward pass gets a fresh independent noise realisation.
 
         @qml.qnode(self.dev, interface="torch", diff_method="parameter-shift")
-        def circuit(inputs, weights):
-            # --------------------------------------------------
-            # Step 1 — RX encoding with Layer 2 Pauli noise
-            # --------------------------------------------------
+        def circuit(inputs, weights, training):
+            # ---- Step 1: RX encoding + Layer 2 noise ----
             for w in range(n_q):
                 angle = inputs[w] if w < len(inputs) else torch.tensor(0.0)
                 qml.RX(angle, wires=w)
-                # Layer 2: Pauli error after each RX
-                qml.PauliError("X", p1, wires=w)
-                qml.PauliError("Z", p1, wires=w)
+                apply_pauli_noise(w, PAULI_NOISE_1Q, bool(training))
 
-            # --------------------------------------------------
-            # Step 2 — Layers: ring CNOT then RY + Pauli noise
-            # --------------------------------------------------
-            for l in range(n_layers):
-                # Ring CNOT with 2-qubit Pauli noise
+            # ---- Step 2: Layers ----
+            for l in range(n_lay):
+                # Ring CNOT + noise on both qubits
                 for w in range(n_q):
                     tgt = (w + 1) % n_q
                     qml.CNOT(wires=[w, tgt])
-                    # Layer 2: depolarising-style Pauli on both qubits
-                    qml.PauliError("X", p2, wires=w)
-                    qml.PauliError("Z", p2, wires=tgt)
+                    apply_pauli_noise(w,   PAULI_NOISE_2Q, bool(training))
+                    apply_pauli_noise(tgt, PAULI_NOISE_2Q, bool(training))
 
-                # RY trainable with Pauli noise
+                # RY trainable + noise
                 for w in range(n_q):
                     qml.RY(weights[l, w], wires=w)
-                    qml.PauliError("Y", p1, wires=w)
+                    apply_pauli_noise(w, PAULI_NOISE_1Q, bool(training))
 
             return [qml.expval(qml.PauliZ(w)) for w in range(n_q)]
 
         self.circuit = circuit
 
-    # ------------------------------------------------------------------
-    #  Override train/eval so Layer 1 noise tracks nn.Module state
-    # ------------------------------------------------------------------
     def train(self, mode=True):
-        self.training_ = mode
+        self.is_training = mode
         return super().train(mode)
 
     def eval(self):
-        self.training_ = False
+        self.is_training = False
         return super().eval()
 
     def forward(self, x):
         x = x.float()
 
         def _run(xi):
-            # Pad input from n_features to n_qubits
+            # Pad input to n_qubits
             if xi.shape[0] < self.n_qubits:
                 pad = torch.zeros(self.n_qubits - xi.shape[0])
                 xi  = torch.cat([xi, pad])
 
-            # ---- Layer 1: inject encoding noise ----
-            xi = inject_encoding_noise(xi, training=self.training_)
+            # Layer 1: data-level encoding noise
+            xi = inject_encoding_noise(xi, training=self.is_training)
 
-            out = self.circuit(xi, self.weights)
+            # Layers 2+3: circuit with in-circuit Pauli noise
+            out = self.circuit(xi, self.weights, self.is_training)
             return torch.stack(out) if isinstance(out, (list, tuple)) else out
 
         if x.dim() == 1:
@@ -268,8 +272,7 @@ class GeneratorArchC(torch.nn.Module):
 
 # ================================================================
 #  CLASSICAL DISCRIMINATOR
-#  input_dim=6 — generator outputs 6 qubit measurements
-#  No Sigmoid — WGAN-GP needs raw scores
+#  input_dim=6  |  No Sigmoid — WGAN-GP raw scores
 # ================================================================
 class ClassicalDiscriminator(torch.nn.Module):
 
@@ -282,7 +285,6 @@ class ClassicalDiscriminator(torch.nn.Module):
             torch.nn.Linear(32, 16),
             torch.nn.LeakyReLU(0.2),
             torch.nn.Linear(16, 1),
-            # NO Sigmoid — WGAN-GP raw scores
         )
 
     def forward(self, x):
