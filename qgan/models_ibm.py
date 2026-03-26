@@ -27,7 +27,13 @@ GATE_2Q  = 300e-9 # two-qubit gate time    (seconds)
 def _build_noise_model(n_qubits):
     """
     Build a custom depolarizing + thermal relaxation noise model.
-    Applied to every qubit and every gate in the circuit.
+
+    Key rules Qiskit enforces:
+      - depolarizing_error(p, 1) and thermal_relaxation_error(...) are both
+        1-qubit errors — compose() them qubit-by-qubit for 1Q gates.
+      - For 2Q gates (cx) the depolarizing error must be exactly 2-qubit;
+        thermal relaxation is still 1-qubit and must be added PER QUBIT
+        via separate add_quantum_error calls (not tensored into a 4-qubit op).
     """
     from qiskit_aer.noise import (
         NoiseModel, depolarizing_error, thermal_relaxation_error
@@ -35,25 +41,29 @@ def _build_noise_model(n_qubits):
 
     noise_model = NoiseModel()
 
+    # ---- single-qubit gate noise --------------------------------
+    # compose(): depolarizing channel first, then thermal relaxation
     for qubit in range(n_qubits):
-        # --- single-qubit gate noise (rx, ry, u1, u2, u3) ---
-        dep_1q    = depolarizing_error(DEPOL_1Q, 1)
-        therm_1q  = thermal_relaxation_error(T1, T2, GATE_1Q)
-        combined_1q = dep_1q.compose(therm_1q)
+        dep_1q      = depolarizing_error(DEPOL_1Q, 1)
+        therm_1q    = thermal_relaxation_error(T1, T2, GATE_1Q)
+        combined_1q = dep_1q.compose(therm_1q)          # both are 1-qubit ✓
         noise_model.add_quantum_error(
             combined_1q,
             ["rx", "ry", "rz", "h", "u1", "u2", "u3"],
             [qubit]
         )
 
-    # --- two-qubit gate noise (cx / CNOT) ---
-    dep_2q = depolarizing_error(DEPOL_2Q, 2)
+    # ---- two-qubit gate noise (cx / CNOT) -----------------------
+    # 2-qubit depolarizing error applied to each [ctrl, tgt] pair
+    dep_2q = depolarizing_error(DEPOL_2Q, 2)            # 2-qubit error ✓
     for ctrl in range(n_qubits):
-        tgt = (ctrl + 1) % n_qubits   # ring topology
-        therm_ctrl = thermal_relaxation_error(T1, T2, GATE_2Q)
-        therm_tgt  = thermal_relaxation_error(T1, T2, GATE_2Q)
-        combined_2q = dep_2q.expand(therm_ctrl.tensor(therm_tgt))
-        noise_model.add_quantum_error(combined_2q, ["cx"], [ctrl, tgt])
+        tgt = (ctrl + 1) % n_qubits                     # ring topology
+        noise_model.add_quantum_error(dep_2q, ["cx"], [ctrl, tgt])
+
+    # Thermal relaxation during 2Q gate — added per qubit (still 1-qubit op)
+    therm_2q = thermal_relaxation_error(T1, T2, GATE_2Q)  # 1-qubit error ✓
+    for qubit in range(n_qubits):
+        noise_model.add_quantum_error(therm_2q, ["cx"], [qubit])
 
     return noise_model
 
