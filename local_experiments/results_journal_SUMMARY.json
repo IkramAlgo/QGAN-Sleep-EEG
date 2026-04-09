@@ -1,0 +1,846 @@
+{
+  "simulator": {
+    "4_features": {
+      "n_features": 4,
+      "condition": "simulator",
+      "folds": [
+        {
+          "fold_idx": 0,
+          "test_subject": "EPCTL01.edf",
+          "mae": {
+            "mean_MAE": 0.7029,
+            "std_MAE": 0.2741
+          },
+          "clf": {
+            "Accuracy": 0.685,
+            "Precision": 0.6149,
+            "Sensitivity": 0.99,
+            "Specificity": 0.38,
+            "F1": 0.7586
+          },
+          "history": {
+            "avg_time_per_epoch": 122.92,
+            "final_gen_loss": -0.1969,
+            "final_disc_loss": -0.4513
+          }
+        },
+        {
+          "fold_idx": 1,
+          "test_subject": "EPCTL02.edf",
+          "mae": {
+            "mean_MAE": 0.8665,
+            "std_MAE": 0.0887
+          },
+          "clf": {
+            "Accuracy": 0.685,
+            "Precision": 0.6209,
+            "Sensitivity": 0.95,
+            "Specificity": 0.42,
+            "F1": 0.751
+          },
+          "history": {
+            "avg_time_per_epoch": 71.82,
+            "final_gen_loss": -0.0769,
+            "final_disc_loss": 1.0392
+          }
+        },
+        {
+          "fold_idx": 2,
+          "test_subject": "EPCTL03.edf",
+          "mae": {
+            "mean_MAE": 0.2706,
+            "std_MAE": 0.1043
+          },
+          "clf": {
+            "Accuracy": 0.65,
+            "Precision": 0.6974,
+            "Sensitivity": 0.53,
+            "Specificity": 0.77,
+            "F1": 0.6023
+          },
+          "history": {
+            "avg_time_per_epoch": 89.24,
+            "final_gen_loss": 0.6898,
+            "final_disc_loss": -1.2472
+          }
+        }
+      ],
+      "aggregated": {
+        "mean_MAE": {
+          "mean": 0.6133,
+          "std": 0.2514,
+          "all": [
+            0.7029,
+            0.8665,
+            0.2706
+          ]
+        },
+        "std_MAE": {
+          "mean": 0.1557,
+          "std": 0.084,
+          "all": [
+            0.2741,
+            0.0887,
+            0.1043
+          ]
+        },
+        "Accuracy": {
+          "mean": 0.6733,
+          "std": 0.0165,
+          "all": [
+            0.685,
+            0.685,
+            0.65
+          ]
+        },
+        "Precision": {
+          "mean": 0.6444,
+          "std": 0.0376,
+          "all": [
+            0.6149,
+            0.6209,
+            0.6974
+          ]
+        },
+        "Sensitivity": {
+          "mean": 0.8233,
+          "std": 0.2081,
+          "all": [
+            0.99,
+            0.95,
+            0.53
+          ]
+        },
+        "Specificity": {
+          "mean": 0.5233,
+          "std": 0.1752,
+          "all": [
+            0.38,
+            0.42,
+            0.77
+          ]
+        },
+        "F1": {
+          "mean": 0.704,
+          "std": 0.072,
+          "all": [
+            0.7586,
+            0.751,
+            0.6023
+          ]
+        },
+        "avg_time_per_epoch": {
+          "mean": 94.66,
+          "std": 21.2106,
+          "all": [
+            122.92,
+            71.82,
+            89.24
+          ]
+        }
+      }
+    },
+    "2_features": {
+      "n_features": 2,
+      "condition": "simulator",
+      "folds": [
+        {
+          "fold_idx": 0,
+          "test_subject": "EPCTL01.edf",
+          "mae": {
+            "mean_MAE": 0.7729,
+            "std_MAE": 0.2328
+          },
+          "clf": {
+            "Accuracy": 0.985,
+            "Precision": 0.9709,
+            "Sensitivity": 1.0,
+            "Specificity": 0.97,
+            "F1": 0.9852
+          },
+          "history": {
+            "avg_time_per_epoch": 379.53,
+            "final_gen_loss": 1.2984,
+            "final_disc_loss": -1.7045
+          }
+        },
+        {
+          "fold_idx": 1,
+          "test_subject": "EPCTL02.edf",
+          "mae": {
+            "mean_MAE": 1.1559,
+            "std_MAE": 0.2073
+          },
+          "clf": {
+            "Accuracy": 0.965,
+            "Precision": 0.9604,
+            "Sensitivity": 0.97,
+            "Specificity": 0.96,
+            "F1": 0.9652
+          },
+          "history": {
+            "avg_time_per_epoch": 392.67,
+            "final_gen_loss": 1.3035,
+            "final_disc_loss": -1.4903
+          }
+        },
+        {
+          "fold_idx": 2,
+          "test_subject": "EPCTL03.edf",
+          "mae": {
+            "mean_MAE": 0.418,
+            "std_MAE": 0.1328
+          },
+          "clf": {
+            "Accuracy": 0.765,
+            "Precision": 0.9077,
+            "Sensitivity": 0.59,
+            "Specificity": 0.94,
+            "F1": 0.7152
+          },
+          "history": {
+            "avg_time_per_epoch": 250.05,
+            "final_gen_loss": 1.0548,
+            "final_disc_loss": -1.7347
+          }
+        }
+      ],
+      "aggregated": {
+        "mean_MAE": {
+          "mean": 0.7823,
+          "std": 0.3013,
+          "all": [
+            0.7729,
+            1.1559,
+            0.418
+          ]
+        },
+        "std_MAE": {
+          "mean": 0.191,
+          "std": 0.0424,
+          "all": [
+            0.2328,
+            0.2073,
+            0.1328
+          ]
+        },
+        "Accuracy": {
+          "mean": 0.905,
+          "std": 0.0993,
+          "all": [
+            0.985,
+            0.965,
+            0.765
+          ]
+        },
+        "Precision": {
+          "mean": 0.9463,
+          "std": 0.0277,
+          "all": [
+            0.9709,
+            0.9604,
+            0.9077
+          ]
+        },
+        "Sensitivity": {
+          "mean": 0.8533,
+          "std": 0.1866,
+          "all": [
+            1.0,
+            0.97,
+            0.59
+          ]
+        },
+        "Specificity": {
+          "mean": 0.9567,
+          "std": 0.0125,
+          "all": [
+            0.97,
+            0.96,
+            0.94
+          ]
+        },
+        "F1": {
+          "mean": 0.8885,
+          "std": 0.1228,
+          "all": [
+            0.9852,
+            0.9652,
+            0.7152
+          ]
+        },
+        "avg_time_per_epoch": {
+          "mean": 340.75,
+          "std": 64.3585,
+          "all": [
+            379.53,
+            392.67,
+            250.05
+          ]
+        }
+      }
+    },
+    "3_features": {
+      "n_features": 3,
+      "condition": "simulator",
+      "folds": [
+        {
+          "fold_idx": 0,
+          "test_subject": "EPCTL01.edf",
+          "mae": {
+            "mean_MAE": 0.5227,
+            "std_MAE": 0.305
+          },
+          "clf": {
+            "Accuracy": 0.98,
+            "Precision": 0.9615,
+            "Sensitivity": 1.0,
+            "Specificity": 0.96,
+            "F1": 0.9804
+          },
+          "history": {
+            "avg_time_per_epoch": 257.09,
+            "final_gen_loss": 0.9342,
+            "final_disc_loss": -1.3133
+          }
+        },
+        {
+          "fold_idx": 1,
+          "test_subject": "EPCTL02.edf",
+          "mae": {
+            "mean_MAE": 0.7384,
+            "std_MAE": 0.1287
+          },
+          "clf": {
+            "Accuracy": 0.915,
+            "Precision": 0.8739,
+            "Sensitivity": 0.97,
+            "Specificity": 0.86,
+            "F1": 0.9194
+          },
+          "history": {
+            "avg_time_per_epoch": 147.86,
+            "final_gen_loss": 0.5669,
+            "final_disc_loss": -1.1747
+          }
+        },
+        {
+          "fold_idx": 2,
+          "test_subject": "EPCTL03.edf",
+          "mae": {
+            "mean_MAE": 0.2849,
+            "std_MAE": 0.1172
+          },
+          "clf": {
+            "Accuracy": 0.635,
+            "Precision": 0.9355,
+            "Sensitivity": 0.29,
+            "Specificity": 0.98,
+            "F1": 0.4427
+          },
+          "history": {
+            "avg_time_per_epoch": 164.1,
+            "final_gen_loss": 1.0255,
+            "final_disc_loss": -1.5008
+          }
+        }
+      ],
+      "aggregated": {
+        "mean_MAE": {
+          "mean": 0.5153,
+          "std": 0.1852,
+          "all": [
+            0.5227,
+            0.7384,
+            0.2849
+          ]
+        },
+        "std_MAE": {
+          "mean": 0.1836,
+          "std": 0.0859,
+          "all": [
+            0.305,
+            0.1287,
+            0.1172
+          ]
+        },
+        "Accuracy": {
+          "mean": 0.8433,
+          "std": 0.1497,
+          "all": [
+            0.98,
+            0.915,
+            0.635
+          ]
+        },
+        "Precision": {
+          "mean": 0.9236,
+          "std": 0.0367,
+          "all": [
+            0.9615,
+            0.8739,
+            0.9355
+          ]
+        },
+        "Sensitivity": {
+          "mean": 0.7533,
+          "std": 0.3279,
+          "all": [
+            1.0,
+            0.97,
+            0.29
+          ]
+        },
+        "Specificity": {
+          "mean": 0.9333,
+          "std": 0.0525,
+          "all": [
+            0.96,
+            0.86,
+            0.98
+          ]
+        },
+        "F1": {
+          "mean": 0.7808,
+          "std": 0.2404,
+          "all": [
+            0.9804,
+            0.9194,
+            0.4427
+          ]
+        },
+        "avg_time_per_epoch": {
+          "mean": 189.6833,
+          "std": 48.1226,
+          "all": [
+            257.09,
+            147.86,
+            164.1
+          ]
+        }
+      }
+    }
+  },
+  "simulator_datanoise": {
+    "4_features": {
+      "n_features": 4,
+      "condition": "simulator_datanoise",
+      "folds": [
+        {
+          "fold_idx": 0,
+          "test_subject": "EPCTL01.edf",
+          "mae": {
+            "mean_MAE": 0.7141,
+            "std_MAE": 0.2735
+          },
+          "clf": {
+            "Accuracy": 0.9,
+            "Precision": 0.839,
+            "Sensitivity": 0.99,
+            "Specificity": 0.81,
+            "F1": 0.9083
+          },
+          "history": {
+            "avg_time_per_epoch": 52.08,
+            "final_gen_loss": 0.566,
+            "final_disc_loss": -1.1179
+          }
+        },
+        {
+          "fold_idx": 1,
+          "test_subject": "EPCTL02.edf",
+          "mae": {
+            "mean_MAE": 0.8427,
+            "std_MAE": 0.0889
+          },
+          "clf": {
+            "Accuracy": 0.725,
+            "Precision": 0.6531,
+            "Sensitivity": 0.96,
+            "Specificity": 0.49,
+            "F1": 0.7773
+          },
+          "history": {
+            "avg_time_per_epoch": 49.57,
+            "final_gen_loss": -0.0599,
+            "final_disc_loss": -1.1571
+          }
+        },
+        {
+          "fold_idx": 2,
+          "test_subject": "EPCTL03.edf",
+          "mae": {
+            "mean_MAE": 0.2608,
+            "std_MAE": 0.084
+          },
+          "clf": {
+            "Accuracy": 0.46,
+            "Precision": 0.4167,
+            "Sensitivity": 0.2,
+            "Specificity": 0.72,
+            "F1": 0.2703
+          },
+          "history": {
+            "avg_time_per_epoch": 55.67,
+            "final_gen_loss": 0.0475,
+            "final_disc_loss": 0.5336
+          }
+        }
+      ],
+      "aggregated": {
+        "mean_MAE": {
+          "mean": 0.6059,
+          "std": 0.2496,
+          "all": [
+            0.7141,
+            0.8427,
+            0.2608
+          ]
+        },
+        "std_MAE": {
+          "mean": 0.1488,
+          "std": 0.0882,
+          "all": [
+            0.2735,
+            0.0889,
+            0.084
+          ]
+        },
+        "Accuracy": {
+          "mean": 0.695,
+          "std": 0.1809,
+          "all": [
+            0.9,
+            0.725,
+            0.46
+          ]
+        },
+        "Precision": {
+          "mean": 0.6363,
+          "std": 0.1728,
+          "all": [
+            0.839,
+            0.6531,
+            0.4167
+          ]
+        },
+        "Sensitivity": {
+          "mean": 0.7167,
+          "std": 0.3655,
+          "all": [
+            0.99,
+            0.96,
+            0.2
+          ]
+        },
+        "Specificity": {
+          "mean": 0.6733,
+          "std": 0.1347,
+          "all": [
+            0.81,
+            0.49,
+            0.72
+          ]
+        },
+        "F1": {
+          "mean": 0.652,
+          "std": 0.2751,
+          "all": [
+            0.9083,
+            0.7773,
+            0.2703
+          ]
+        },
+        "avg_time_per_epoch": {
+          "mean": 52.44,
+          "std": 2.5033,
+          "all": [
+            52.08,
+            49.57,
+            55.67
+          ]
+        }
+      }
+    },
+    "2_features": {
+      "n_features": 2,
+      "condition": "simulator_datanoise",
+      "folds": [
+        {
+          "fold_idx": 0,
+          "test_subject": "EPCTL01.edf",
+          "mae": {
+            "mean_MAE": 0.793,
+            "std_MAE": 0.2737
+          },
+          "clf": {
+            "Accuracy": 0.925,
+            "Precision": 0.8696,
+            "Sensitivity": 1.0,
+            "Specificity": 0.85,
+            "F1": 0.9302
+          },
+          "history": {
+            "avg_time_per_epoch": 208.26,
+            "final_gen_loss": 0.9909,
+            "final_disc_loss": -1.6903
+          }
+        },
+        {
+          "fold_idx": 1,
+          "test_subject": "EPCTL02.edf",
+          "mae": {
+            "mean_MAE": 1.1002,
+            "std_MAE": 0.2474
+          },
+          "clf": {
+            "Accuracy": 0.985,
+            "Precision": 1.0,
+            "Sensitivity": 0.97,
+            "Specificity": 1.0,
+            "F1": 0.9848
+          },
+          "history": {
+            "avg_time_per_epoch": 243.57,
+            "final_gen_loss": 0.4395,
+            "final_disc_loss": -0.3887
+          }
+        },
+        {
+          "fold_idx": 2,
+          "test_subject": "EPCTL03.edf",
+          "mae": {
+            "mean_MAE": 0.4522,
+            "std_MAE": 0.1277
+          },
+          "clf": {
+            "Accuracy": 0.86,
+            "Precision": 0.9286,
+            "Sensitivity": 0.78,
+            "Specificity": 0.94,
+            "F1": 0.8478
+          },
+          "history": {
+            "avg_time_per_epoch": 320.87,
+            "final_gen_loss": 0.4265,
+            "final_disc_loss": 0.7502
+          }
+        }
+      ],
+      "aggregated": {
+        "mean_MAE": {
+          "mean": 0.7818,
+          "std": 0.2647,
+          "all": [
+            0.793,
+            1.1002,
+            0.4522
+          ]
+        },
+        "std_MAE": {
+          "mean": 0.2163,
+          "std": 0.0635,
+          "all": [
+            0.2737,
+            0.2474,
+            0.1277
+          ]
+        },
+        "Accuracy": {
+          "mean": 0.9233,
+          "std": 0.051,
+          "all": [
+            0.925,
+            0.985,
+            0.86
+          ]
+        },
+        "Precision": {
+          "mean": 0.9327,
+          "std": 0.0533,
+          "all": [
+            0.8696,
+            1.0,
+            0.9286
+          ]
+        },
+        "Sensitivity": {
+          "mean": 0.9167,
+          "std": 0.0974,
+          "all": [
+            1.0,
+            0.97,
+            0.78
+          ]
+        },
+        "Specificity": {
+          "mean": 0.93,
+          "std": 0.0616,
+          "all": [
+            0.85,
+            1.0,
+            0.94
+          ]
+        },
+        "F1": {
+          "mean": 0.9209,
+          "std": 0.0563,
+          "all": [
+            0.9302,
+            0.9848,
+            0.8478
+          ]
+        },
+        "avg_time_per_epoch": {
+          "mean": 257.5667,
+          "std": 47.0261,
+          "all": [
+            208.26,
+            243.57,
+            320.87
+          ]
+        }
+      }
+    },
+    "3_features": {
+      "n_features": 3,
+      "condition": "simulator_datanoise",
+      "folds": [
+        {
+          "fold_idx": 0,
+          "test_subject": "EPCTL01.edf",
+          "mae": {
+            "mean_MAE": 0.5365,
+            "std_MAE": 0.314
+          },
+          "clf": {
+            "Accuracy": 0.91,
+            "Precision": 0.91,
+            "Sensitivity": 0.91,
+            "Specificity": 0.91,
+            "F1": 0.91
+          },
+          "history": {
+            "avg_time_per_epoch": 323.62,
+            "final_gen_loss": 0.7523,
+            "final_disc_loss": -0.4586
+          }
+        },
+        {
+          "fold_idx": 1,
+          "test_subject": "EPCTL02.edf",
+          "mae": {
+            "mean_MAE": 0.7127,
+            "std_MAE": 0.1485
+          },
+          "clf": {
+            "Accuracy": 0.905,
+            "Precision": 0.8522,
+            "Sensitivity": 0.98,
+            "Specificity": 0.83,
+            "F1": 0.9116
+          },
+          "history": {
+            "avg_time_per_epoch": 119.51,
+            "final_gen_loss": 0.6488,
+            "final_disc_loss": -0.8436
+          }
+        },
+        {
+          "fold_idx": 2,
+          "test_subject": "EPCTL03.edf",
+          "mae": {
+            "mean_MAE": 0.2816,
+            "std_MAE": 0.1175
+          },
+          "clf": {
+            "Accuracy": 0.65,
+            "Precision": 0.7885,
+            "Sensitivity": 0.41,
+            "Specificity": 0.89,
+            "F1": 0.5395
+          },
+          "history": {
+            "avg_time_per_epoch": 109.14,
+            "final_gen_loss": 0.7423,
+            "final_disc_loss": -1.235
+          }
+        }
+      ],
+      "aggregated": {
+        "mean_MAE": {
+          "mean": 0.5103,
+          "std": 0.177,
+          "all": [
+            0.5365,
+            0.7127,
+            0.2816
+          ]
+        },
+        "std_MAE": {
+          "mean": 0.1933,
+          "std": 0.0863,
+          "all": [
+            0.314,
+            0.1485,
+            0.1175
+          ]
+        },
+        "Accuracy": {
+          "mean": 0.8217,
+          "std": 0.1214,
+          "all": [
+            0.91,
+            0.905,
+            0.65
+          ]
+        },
+        "Precision": {
+          "mean": 0.8502,
+          "std": 0.0496,
+          "all": [
+            0.91,
+            0.8522,
+            0.7885
+          ]
+        },
+        "Sensitivity": {
+          "mean": 0.7667,
+          "std": 0.2538,
+          "all": [
+            0.91,
+            0.98,
+            0.41
+          ]
+        },
+        "Specificity": {
+          "mean": 0.8767,
+          "std": 0.034,
+          "all": [
+            0.91,
+            0.83,
+            0.89
+          ]
+        },
+        "F1": {
+          "mean": 0.787,
+          "std": 0.175,
+          "all": [
+            0.91,
+            0.9116,
+            0.5395
+          ]
+        },
+        "avg_time_per_epoch": {
+          "mean": 184.09,
+          "std": 98.7534,
+          "all": [
+            323.62,
+            119.51,
+            109.14
+          ]
+        }
+      }
+    }
+  }
+}
