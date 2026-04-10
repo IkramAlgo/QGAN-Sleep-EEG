@@ -30,10 +30,13 @@ SUBJECT_PATHS = [
     "data/EPCTL01.edf",
     "data/EPCTL02.edf",
     "data/EPCTL03.edf",
-    # "data/EPCTL04.edf",   # add when available
-    # "data/EPCTL05.edf",
-    # "data/EPCTL06.edf",
-    # "data/EPCTL07.edf",
+    "data/EPCTL04.edf",   # add when available
+    "data/EPCTL05.edf",
+    "data/EPCTL06.edf",
+    "data/EPCTL07.edf",
+    "data/EPCTL09.edf",
+    "data/EPCTL10.edf",
+    "data/EPCTL11.edf",
 ]
 
 # Cache: path -> tensor, so LOOCV folds don't re-read disk
