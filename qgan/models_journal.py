@@ -217,8 +217,7 @@ def _build_circuit(dev, diff_method: str, n_qubits: int, n_layers: int):
     Construct and return a QNode for Arch C.
     diff_method is passed through — backprop for ideal sim, spsa for QPU.
     """
-    @qml.qnode(dev, interface="torch", diff_method=diff_method,
-               h=SPSA_H if diff_method == "spsa" else None)
+    @qml.qnode(dev, interface="torch", diff_method=diff_method)
     def circuit(inputs, weights):
         # Encoding layer — RX on each qubit
         for w in range(n_qubits):
