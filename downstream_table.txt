@@ -1,0 +1,37 @@
+% ============================================================
+% Downstream SVM Evaluation — ANPHY-Sleep (EPCTL01-03)
+% All three models trained with WGAN-GP for fair comparison
+% Real PSG labels: W=Wake, N1, N2, N3, R=REM
+% L (Lights) epochs excluded
+% Classifier: RBF-SVM, balanced class weights
+%
+% CORRECTIONS vs. original draft:
+%   1. Caption: minority class is N1 (8.2%), not Wake (10.9%)
+%   2. Features=4 baseline MacroF1 0.4343 is best → now bolded
+% ============================================================
+
+\begin{table}[h]
+\centering
+\caption{Downstream sleep stage classification on ANPHY-Sleep (EPCTL01--03, 3 subjects) using real PSG stage labels (W, N1, N2, N3, REM). All three generative models trained with WGAN-GP for architectural fairness. Each augments the minority class (N1) with synthetic samples. Classifier: RBF-SVM with balanced class weights. Bold = best per feature group. $\Delta$ = change over real-data-only baseline.}
+\label{tab:downstream}
+\begin{tabular}{|c|l|c|c|c|c|}
+\hline
+\textbf{Feat.} & \textbf{Training Data} & \textbf{Acc} & $\boldsymbol{\Delta}$\textbf{Acc} & \textbf{Macro F1} & $\boldsymbol{\Delta}$\textbf{F1} \\
+\hline
+  Real Only (Baseline) & 0.4322 & --- & \textbf{0.3555} & --- \\
+  Real + Classical GAN (WGAN-GP) & \textbf{0.4689} & +0.0367 & 0.3322 & -0.0233 \\
+  Real + QGAN Noiseless & 0.4652 & +0.0330 & 0.3272 & -0.0283 \\
+  Real + QGAN Noisy & 0.4670 & +0.0348 & 0.3276 & -0.0279 \\
+  \hline
+  Real Only (Baseline) & 0.4542 & --- & \textbf{0.4158} & --- \\
+  Real + Classical GAN (WGAN-GP) & \textbf{0.5147} & +0.0605 & 0.3991 & -0.0167 \\
+  Real + QGAN Noiseless & 0.5128 & +0.0586 & 0.4124 & -0.0034 \\
+  Real + QGAN Noisy & 0.5110 & +0.0568 & 0.4113 & -0.0045 \\
+  \hline
+  Real Only (Baseline) & 0.4670 & --- & \textbf{0.4343} & --- \\
+  Real + Classical GAN (WGAN-GP) & \textbf{0.5403} & +0.0733 & 0.4135 & -0.0208 \\
+  Real + QGAN Noiseless & 0.5147 & +0.0477 & 0.4055 & -0.0288 \\
+  Real + QGAN Noisy & 0.5183 & +0.0513 & 0.4201 & -0.0142 \\
+  \hline
+\end{tabular}
+\end{table}

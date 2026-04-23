@@ -1,0 +1,194 @@
+{
+  "2_features": {
+    "baseline": {
+      "label": "Real Only (Baseline)",
+      "accuracy": 0.4322,
+      "macro_f1": 0.3555,
+      "f1_per_class": {
+        "Wake": 0.2376,
+        "N1": 0.2182,
+        "N2": 0.5533,
+        "N3": 0.4637,
+        "REM": 0.3046
+      },
+      "n_train": 2184,
+      "n_test": 546
+    },
+    "classical_gan_aug": {
+      "label": "Real + Classical GAN",
+      "accuracy": 0.4689,
+      "macro_f1": 0.3322,
+      "f1_per_class": {
+        "Wake": 0.2151,
+        "N1": 0.0,
+        "N2": 0.5963,
+        "N3": 0.4498,
+        "REM": 0.4
+      },
+      "n_train": 2363,
+      "n_test": 546,
+      "acc_improvement": 0.0367,
+      "f1_improvement": -0.0233
+    },
+    "qgan_noiseless_aug": {
+      "label": "Real + QGAN Noiseless",
+      "accuracy": 0.4652,
+      "macro_f1": 0.3272,
+      "f1_per_class": {
+        "Wake": 0.1707,
+        "N1": 0.04,
+        "N2": 0.591,
+        "N3": 0.4478,
+        "REM": 0.3867
+      },
+      "n_train": 2363,
+      "n_test": 546,
+      "acc_improvement": 0.033,
+      "f1_improvement": -0.0283
+    },
+    "qgan_noisy_aug": {
+      "label": "Real + QGAN Noisy",
+      "accuracy": 0.467,
+      "macro_f1": 0.3276,
+      "f1_per_class": {
+        "Wake": 0.1687,
+        "N1": 0.04,
+        "N2": 0.5953,
+        "N3": 0.4453,
+        "REM": 0.3889
+      },
+      "n_train": 2363,
+      "n_test": 546,
+      "acc_improvement": 0.0348,
+      "f1_improvement": -0.0279
+    }
+  },
+  "3_features": {
+    "baseline": {
+      "label": "Real Only (Baseline)",
+      "accuracy": 0.4542,
+      "macro_f1": 0.4158,
+      "f1_per_class": {
+        "Wake": 0.3952,
+        "N1": 0.2378,
+        "N2": 0.5192,
+        "N3": 0.5764,
+        "REM": 0.3504
+      },
+      "n_train": 2184,
+      "n_test": 546
+    },
+    "classical_gan_aug": {
+      "label": "Real + Classical GAN",
+      "accuracy": 0.5147,
+      "macro_f1": 0.3991,
+      "f1_per_class": {
+        "Wake": 0.4064,
+        "N1": 0.0,
+        "N2": 0.6276,
+        "N3": 0.5395,
+        "REM": 0.4217
+      },
+      "n_train": 2363,
+      "n_test": 546,
+      "acc_improvement": 0.0605,
+      "f1_improvement": -0.0167
+    },
+    "qgan_noiseless_aug": {
+      "label": "Real + QGAN Noiseless",
+      "accuracy": 0.5128,
+      "macro_f1": 0.4124,
+      "f1_per_class": {
+        "Wake": 0.4301,
+        "N1": 0.0755,
+        "N2": 0.6191,
+        "N3": 0.5171,
+        "REM": 0.4204
+      },
+      "n_train": 2363,
+      "n_test": 546,
+      "acc_improvement": 0.0586,
+      "f1_improvement": -0.0034
+    },
+    "qgan_noisy_aug": {
+      "label": "Real + QGAN Noisy",
+      "accuracy": 0.511,
+      "macro_f1": 0.4113,
+      "f1_per_class": {
+        "Wake": 0.4362,
+        "N1": 0.0741,
+        "N2": 0.6189,
+        "N3": 0.5098,
+        "REM": 0.4177
+      },
+      "n_train": 2363,
+      "n_test": 546,
+      "acc_improvement": 0.0568,
+      "f1_improvement": -0.0045
+    }
+  },
+  "4_features": {
+    "baseline": {
+      "label": "Real Only (Baseline)",
+      "accuracy": 0.467,
+      "macro_f1": 0.4343,
+      "f1_per_class": {
+        "Wake": 0.4231,
+        "N1": 0.2449,
+        "N2": 0.5073,
+        "N3": 0.6186,
+        "REM": 0.3776
+      },
+      "n_train": 2184,
+      "n_test": 546
+    },
+    "classical_gan_aug": {
+      "label": "Real + Classical GAN",
+      "accuracy": 0.5403,
+      "macro_f1": 0.4135,
+      "f1_per_class": {
+        "Wake": 0.4481,
+        "N1": 0.0,
+        "N2": 0.6521,
+        "N3": 0.5674,
+        "REM": 0.4
+      },
+      "n_train": 2363,
+      "n_test": 546,
+      "acc_improvement": 0.0733,
+      "f1_improvement": -0.0208
+    },
+    "qgan_noiseless_aug": {
+      "label": "Real + QGAN Noiseless",
+      "accuracy": 0.5147,
+      "macro_f1": 0.4055,
+      "f1_per_class": {
+        "Wake": 0.4064,
+        "N1": 0.0351,
+        "N2": 0.6379,
+        "N3": 0.5167,
+        "REM": 0.4314
+      },
+      "n_train": 2363,
+      "n_test": 546,
+      "acc_improvement": 0.0477,
+      "f1_improvement": -0.0288
+    },
+    "qgan_noisy_aug": {
+      "label": "Real + QGAN Noisy",
+      "accuracy": 0.5183,
+      "macro_f1": 0.4201,
+      "f1_per_class": {
+        "Wake": 0.3978,
+        "N1": 0.1053,
+        "N2": 0.6351,
+        "N3": 0.5308,
+        "REM": 0.4314
+      },
+      "n_train": 2363,
+      "n_test": 546,
+      "acc_improvement": 0.0513,
+      "f1_improvement": -0.0142
+    }
+  }
+}
