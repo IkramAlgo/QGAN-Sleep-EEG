@@ -863,7 +863,7 @@ def main():
     else:
         n_epochs_cpu  = int(os.getenv("CPU_EPOCHS", "50"))
         n_epochs_qpu  = int(os.getenv("QPU_EPOCHS", "100"))
-        subject_paths = [p for p in SUBJECT_PATHS if os.path.exists(p)]
+        subject_paths = [p for p in subject_paths if os.path.exists(p)]
         print(f"\n  MODE: FULL | CPU_EPOCHS={n_epochs_cpu} "
               f"QPU_EPOCHS={n_epochs_qpu}")
         print(f"  Feature sets: {feature_sets}")

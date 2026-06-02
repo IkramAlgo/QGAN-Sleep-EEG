@@ -1,0 +1,198 @@
+{
+  "all_unique": [
+    "+0.000000",
+    "+1.000000",
+    "+12180.000000",
+    "+18864.000000",
+    "+2149.000000",
+    "+23672.000000",
+    "+370.000000",
+    "+391.000000",
+    "+744.000000",
+    "+7848.000000",
+    "+8635.000000",
+    "0",
+    "A1+A2 OFF",
+    "CO2 Not connected",
+    "Segment: REC START 84 EEG-PSG",
+    "SpO2 CORD OFF",
+    "SpO2 PULSE SEARCH",
+    "left side",
+    "side right",
+    "supine"
+  ],
+  "per_file": {
+    "EPCTL01.edf": {
+      "n_annotations": 4,
+      "n_unique": 4,
+      "unique_strings": [
+        "+0.000000",
+        "+1.000000",
+        "A1+A2 OFF",
+        "Segment: REC START 84 EEG-PSG"
+      ],
+      "first_20_with_onset": [
+        {
+          "onset": 0.0,
+          "desc": "+0.000000"
+        },
+        {
+          "onset": 0.0,
+          "desc": "Segment: REC START 84 EEG-PSG"
+        },
+        {
+          "onset": 0.9599,
+          "desc": "+1.000000"
+        },
+        {
+          "onset": 0.9599,
+          "desc": "A1+A2 OFF"
+        }
+      ]
+    },
+    "EPCTL02.edf": {
+      "n_annotations": 12,
+      "n_unique": 12,
+      "unique_strings": [
+        "+0.000000",
+        "+1.000000",
+        "+370.000000",
+        "+391.000000",
+        "+744.000000",
+        "+8635.000000",
+        "0",
+        "A1+A2 OFF",
+        "CO2 Not connected",
+        "Segment: REC START 84 EEG-PSG",
+        "SpO2 CORD OFF",
+        "SpO2 PULSE SEARCH"
+      ],
+      "first_20_with_onset": [
+        {
+          "onset": 0.0,
+          "desc": "+0.000000"
+        },
+        {
+          "onset": 0.0,
+          "desc": "Segment: REC START 84 EEG-PSG"
+        },
+        {
+          "onset": 0.753,
+          "desc": "+1.000000"
+        },
+        {
+          "onset": 0.753,
+          "desc": "A1+A2 OFF"
+        },
+        {
+          "onset": 369.9739,
+          "desc": "+370.000000"
+        },
+        {
+          "onset": 369.9739,
+          "desc": "SpO2 CORD OFF"
+        },
+        {
+          "onset": 390.8069,
+          "desc": "+391.000000"
+        },
+        {
+          "onset": 390.8069,
+          "desc": "CO2 Not connected"
+        },
+        {
+          "onset": 743.9639,
+          "desc": "+744.000000"
+        },
+        {
+          "onset": 743.9639,
+          "desc": "SpO2 PULSE SEARCH"
+        },
+        {
+          "onset": 8634.9023,
+          "desc": "+8635.000000"
+        },
+        {
+          "onset": 8634.9023,
+          "desc": "0"
+        }
+      ]
+    },
+    "EPCTL03.edf": {
+      "n_annotations": 14,
+      "n_unique": 12,
+      "unique_strings": [
+        "+0.000000",
+        "+1.000000",
+        "+12180.000000",
+        "+18864.000000",
+        "+2149.000000",
+        "+23672.000000",
+        "+7848.000000",
+        "A1+A2 OFF",
+        "Segment: REC START 84 EEG-PSG",
+        "left side",
+        "side right",
+        "supine"
+      ],
+      "first_20_with_onset": [
+        {
+          "onset": 0.0,
+          "desc": "+0.000000"
+        },
+        {
+          "onset": 0.0,
+          "desc": "Segment: REC START 84 EEG-PSG"
+        },
+        {
+          "onset": 0.753,
+          "desc": "+1.000000"
+        },
+        {
+          "onset": 0.753,
+          "desc": "A1+A2 OFF"
+        },
+        {
+          "onset": 2148.811,
+          "desc": "+2149.000000"
+        },
+        {
+          "onset": 2148.811,
+          "desc": "side right"
+        },
+        {
+          "onset": 7847.7656,
+          "desc": "+7848.000000"
+        },
+        {
+          "onset": 7847.7656,
+          "desc": "supine"
+        },
+        {
+          "onset": 12179.7744,
+          "desc": "+12180.000000"
+        },
+        {
+          "onset": 12179.7744,
+          "desc": "left side"
+        },
+        {
+          "onset": 18863.9042,
+          "desc": "+18864.000000"
+        },
+        {
+          "onset": 18863.9042,
+          "desc": "supine"
+        },
+        {
+          "onset": 23671.8105,
+          "desc": "+23672.000000"
+        },
+        {
+          "onset": 23671.8105,
+          "desc": "left side"
+        }
+      ]
+    }
+  }
+}
