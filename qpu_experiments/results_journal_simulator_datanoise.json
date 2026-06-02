@@ -1,0 +1,120 @@
+{
+  "2_features": {
+    "n_features": 2,
+    "condition": "simulator_datanoise",
+    "folds": [
+      {
+        "fold_idx": 0,
+        "test_subject": "EPCTL01.edf",
+        "collapsed": false,
+        "mae": {
+          "mean_MAE": 0.8124,
+          "std_MAE": 0.2536
+        },
+        "clf": {
+          "Accuracy": 0.985,
+          "Precision": 0.9709,
+          "Sensitivity": 1.0,
+          "Specificity": 0.97,
+          "F1": 0.9852
+        },
+        "history": {
+          "n_epochs_trained": 50,
+          "avg_time_per_epoch": 320.39,
+          "total_fold_time_s": 16066.1,
+          "final_gen_loss": -0.0431,
+          "final_disc_loss": -0.1727
+        }
+      },
+      {
+        "fold_idx": 1,
+        "test_subject": "EPCTL02.edf",
+        "collapsed": false,
+        "mae": {
+          "mean_MAE": 1.1821,
+          "std_MAE": 0.1722
+        },
+        "clf": {
+          "Accuracy": 0.97,
+          "Precision": 0.9519,
+          "Sensitivity": 0.99,
+          "Specificity": 0.95,
+          "F1": 0.9706
+        },
+        "history": {
+          "n_epochs_trained": 50,
+          "avg_time_per_epoch": 315.34,
+          "total_fold_time_s": 15813.7,
+          "final_gen_loss": -0.5391,
+          "final_disc_loss": -0.7681
+        }
+      }
+    ],
+    "aggregated": {
+      "mean_MAE": {
+        "mean": 0.9972,
+        "std": 0.1848,
+        "all": [
+          0.8124,
+          1.1821
+        ]
+      },
+      "std_MAE": {
+        "mean": 0.2129,
+        "std": 0.0407,
+        "all": [
+          0.2536,
+          0.1722
+        ]
+      },
+      "Accuracy": {
+        "mean": 0.9775,
+        "std": 0.0075,
+        "all": [
+          0.985,
+          0.97
+        ]
+      },
+      "Precision": {
+        "mean": 0.9614,
+        "std": 0.0095,
+        "all": [
+          0.9709,
+          0.9519
+        ]
+      },
+      "Sensitivity": {
+        "mean": 0.995,
+        "std": 0.005,
+        "all": [
+          1.0,
+          0.99
+        ]
+      },
+      "Specificity": {
+        "mean": 0.96,
+        "std": 0.01,
+        "all": [
+          0.97,
+          0.95
+        ]
+      },
+      "F1": {
+        "mean": 0.9779,
+        "std": 0.0073,
+        "all": [
+          0.9852,
+          0.9706
+        ]
+      },
+      "avg_time_per_epoch": {
+        "mean": 317.865,
+        "std": 2.525,
+        "all": [
+          320.39,
+          315.34
+        ]
+      }
+    }
+  }
+}
