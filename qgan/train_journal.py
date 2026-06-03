@@ -60,8 +60,7 @@
 #     QPU_EPOCHS=100 python -m qgan.train_journal --mode full --conditions qpu
 #
 #   ALL CONDITIONS:
-#     CPU_EPOCHS=50 QPU_EPOCHS=100 python -m qgan.train_journal \
-#       --mode full --conditions all
+#     CPU_EPOCHS=50 QPU_EPOCHS=50 python -m qgan.train_journal \ --mode full --conditions all
 #
 #   SINGLE FEATURE SET:
 #     FEATURE_SET=combined python -m qgan.train_journal --mode full
