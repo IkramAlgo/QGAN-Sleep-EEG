@@ -1,0 +1,872 @@
+{
+  "statistical_4feat": {
+    "n_features": 4,
+    "feature_set": "statistical",
+    "condition": "simulator",
+    "generator_type": "dcgan",
+    "folds": [
+      {
+        "fold_idx": 0,
+        "test_subject": "EPCTL01.edf",
+        "collapsed": false,
+        "mae": {
+          "mean_MAE": 0.1573,
+          "std_MAE": 0.0754
+        },
+        "clf": {
+          "Accuracy": 0.5,
+          "Precision": 0.5,
+          "Sensitivity": 1.0,
+          "Specificity": 0.0,
+          "F1": 0.6667
+        },
+        "downstream": {
+          "svm_real": {
+            "error": "The number of classes has to be greater than one; got 1 class"
+          },
+          "svm_aug": {
+            "error": "The number of classes has to be greater than one; got 1 class"
+          },
+          "rf_real": {
+            "Accuracy": 1.0,
+            "MacroF1": 1.0,
+            "N1_F1": 0.0,
+            "per_class_F1": {
+              "W": {
+                "F1": 1.0,
+                "Precision": 1.0,
+                "Recall": 1.0
+              }
+            },
+            "n_train": 7989,
+            "n_test": 957,
+            "n_synthetic": 0
+          },
+          "rf_aug": {
+            "Accuracy": 1.0,
+            "MacroF1": 1.0,
+            "N1_F1": 0.0,
+            "per_class_F1": {
+              "W": {
+                "F1": 1.0,
+                "Precision": 1.0,
+                "Recall": 1.0
+              }
+            },
+            "n_train": 7989,
+            "n_test": 957,
+            "n_synthetic": 0,
+            "delta_MacroF1": 0.0,
+            "delta_N1_F1": 0.0
+          }
+        },
+        "n_params_gen": 42788,
+        "n_params_disc": 705,
+        "history": {
+          "n_epochs_trained": 50,
+          "avg_time_per_epoch": 80.37,
+          "total_fold_time_s": 4018.5,
+          "final_gen_loss": -1.1142,
+          "final_disc_loss": 0.0658
+        }
+      },
+      {
+        "fold_idx": 1,
+        "test_subject": "EPCTL02.edf",
+        "collapsed": false,
+        "mae": {
+          "mean_MAE": 0.291,
+          "std_MAE": 0.2022
+        },
+        "clf": {
+          "Accuracy": 0.985,
+          "Precision": 1.0,
+          "Sensitivity": 0.97,
+          "Specificity": 1.0,
+          "F1": 0.9848
+        },
+        "downstream": {
+          "svm_real": {
+            "error": "The number of classes has to be greater than one; got 1 class"
+          },
+          "svm_aug": {
+            "error": "The number of classes has to be greater than one; got 1 class"
+          },
+          "rf_real": {
+            "Accuracy": 1.0,
+            "MacroF1": 1.0,
+            "N1_F1": 0.0,
+            "per_class_F1": {
+              "W": {
+                "F1": 1.0,
+                "Precision": 1.0,
+                "Recall": 1.0
+              }
+            },
+            "n_train": 7875,
+            "n_test": 1071,
+            "n_synthetic": 0
+          },
+          "rf_aug": {
+            "Accuracy": 1.0,
+            "MacroF1": 1.0,
+            "N1_F1": 0.0,
+            "per_class_F1": {
+              "W": {
+                "F1": 1.0,
+                "Precision": 1.0,
+                "Recall": 1.0
+              }
+            },
+            "n_train": 7875,
+            "n_test": 1071,
+            "n_synthetic": 0,
+            "delta_MacroF1": 0.0,
+            "delta_N1_F1": 0.0
+          }
+        },
+        "n_params_gen": 42788,
+        "n_params_disc": 705,
+        "history": {
+          "n_epochs_trained": 50,
+          "avg_time_per_epoch": 79.27,
+          "total_fold_time_s": 3963.5,
+          "final_gen_loss": -1.8089,
+          "final_disc_loss": 0.0831
+        }
+      },
+      {
+        "fold_idx": 2,
+        "test_subject": "EPCTL03.edf",
+        "collapsed": false,
+        "mae": {
+          "mean_MAE": 0.0557,
+          "std_MAE": 0.0214
+        },
+        "clf": {
+          "Accuracy": 0.5,
+          "Precision": 0.5,
+          "Sensitivity": 1.0,
+          "Specificity": 0.0,
+          "F1": 0.6667
+        },
+        "downstream": {
+          "svm_real": {
+            "error": "The number of classes has to be greater than one; got 1 class"
+          },
+          "svm_aug": {
+            "error": "The number of classes has to be greater than one; got 1 class"
+          },
+          "rf_real": {
+            "Accuracy": 1.0,
+            "MacroF1": 1.0,
+            "N1_F1": 0.0,
+            "per_class_F1": {
+              "W": {
+                "F1": 1.0,
+                "Precision": 1.0,
+                "Recall": 1.0
+              }
+            },
+            "n_train": 8105,
+            "n_test": 841,
+            "n_synthetic": 0
+          },
+          "rf_aug": {
+            "Accuracy": 1.0,
+            "MacroF1": 1.0,
+            "N1_F1": 0.0,
+            "per_class_F1": {
+              "W": {
+                "F1": 1.0,
+                "Precision": 1.0,
+                "Recall": 1.0
+              }
+            },
+            "n_train": 8105,
+            "n_test": 841,
+            "n_synthetic": 0,
+            "delta_MacroF1": 0.0,
+            "delta_N1_F1": 0.0
+          }
+        },
+        "n_params_gen": 42788,
+        "n_params_disc": 705,
+        "history": {
+          "n_epochs_trained": 50,
+          "avg_time_per_epoch": 82.07,
+          "total_fold_time_s": 4103.7,
+          "final_gen_loss": -1.2372,
+          "final_disc_loss": 0.0187
+        }
+      },
+      {
+        "fold_idx": 3,
+        "test_subject": "EPCTL04.edf",
+        "collapsed": false,
+        "mae": {
+          "mean_MAE": 0.1236,
+          "std_MAE": 0.0567
+        },
+        "clf": {
+          "Accuracy": 0.5,
+          "Precision": 0.5,
+          "Sensitivity": 1.0,
+          "Specificity": 0.0,
+          "F1": 0.6667
+        },
+        "downstream": {
+          "svm_real": {
+            "error": "The number of classes has to be greater than one; got 1 class"
+          },
+          "svm_aug": {
+            "error": "The number of classes has to be greater than one; got 1 class"
+          },
+          "rf_real": {
+            "Accuracy": 1.0,
+            "MacroF1": 1.0,
+            "N1_F1": 0.0,
+            "per_class_F1": {
+              "W": {
+                "F1": 1.0,
+                "Precision": 1.0,
+                "Recall": 1.0
+              }
+            },
+            "n_train": 8185,
+            "n_test": 761,
+            "n_synthetic": 0
+          },
+          "rf_aug": {
+            "Accuracy": 1.0,
+            "MacroF1": 1.0,
+            "N1_F1": 0.0,
+            "per_class_F1": {
+              "W": {
+                "F1": 1.0,
+                "Precision": 1.0,
+                "Recall": 1.0
+              }
+            },
+            "n_train": 8185,
+            "n_test": 761,
+            "n_synthetic": 0,
+            "delta_MacroF1": 0.0,
+            "delta_N1_F1": 0.0
+          }
+        },
+        "n_params_gen": 42788,
+        "n_params_disc": 705,
+        "history": {
+          "n_epochs_trained": 50,
+          "avg_time_per_epoch": 81.97,
+          "total_fold_time_s": 4098.6,
+          "final_gen_loss": -1.5554,
+          "final_disc_loss": 0.0458
+        }
+      },
+      {
+        "fold_idx": 4,
+        "test_subject": "EPCTL05.edf",
+        "collapsed": false,
+        "mae": {
+          "mean_MAE": 1.0297,
+          "std_MAE": 0.1051
+        },
+        "clf": {
+          "Accuracy": 0.995,
+          "Precision": 1.0,
+          "Sensitivity": 0.99,
+          "Specificity": 1.0,
+          "F1": 0.995
+        },
+        "downstream": {
+          "svm_real": {
+            "error": "The number of classes has to be greater than one; got 1 class"
+          },
+          "svm_aug": {
+            "error": "The number of classes has to be greater than one; got 1 class"
+          },
+          "rf_real": {
+            "Accuracy": 1.0,
+            "MacroF1": 1.0,
+            "N1_F1": 0.0,
+            "per_class_F1": {
+              "W": {
+                "F1": 1.0,
+                "Precision": 1.0,
+                "Recall": 1.0
+              }
+            },
+            "n_train": 8194,
+            "n_test": 752,
+            "n_synthetic": 0
+          },
+          "rf_aug": {
+            "Accuracy": 1.0,
+            "MacroF1": 1.0,
+            "N1_F1": 0.0,
+            "per_class_F1": {
+              "W": {
+                "F1": 1.0,
+                "Precision": 1.0,
+                "Recall": 1.0
+              }
+            },
+            "n_train": 8194,
+            "n_test": 752,
+            "n_synthetic": 0,
+            "delta_MacroF1": 0.0,
+            "delta_N1_F1": 0.0
+          }
+        },
+        "n_params_gen": 42788,
+        "n_params_disc": 705,
+        "history": {
+          "n_epochs_trained": 50,
+          "avg_time_per_epoch": 82.4,
+          "total_fold_time_s": 4119.8,
+          "final_gen_loss": -0.1613,
+          "final_disc_loss": 0.1338
+        }
+      },
+      {
+        "fold_idx": 5,
+        "test_subject": "EPCTL06.edf",
+        "collapsed": false,
+        "mae": {
+          "mean_MAE": 0.5343,
+          "std_MAE": 0.0397
+        },
+        "clf": {
+          "Accuracy": 0.5,
+          "Precision": 0.5,
+          "Sensitivity": 1.0,
+          "Specificity": 0.0,
+          "F1": 0.6667
+        },
+        "downstream": {
+          "svm_real": {
+            "error": "The number of classes has to be greater than one; got 1 class"
+          },
+          "svm_aug": {
+            "error": "The number of classes has to be greater than one; got 1 class"
+          },
+          "rf_real": {
+            "Accuracy": 1.0,
+            "MacroF1": 1.0,
+            "N1_F1": 0.0,
+            "per_class_F1": {
+              "W": {
+                "F1": 1.0,
+                "Precision": 1.0,
+                "Recall": 1.0
+              }
+            },
+            "n_train": 8033,
+            "n_test": 913,
+            "n_synthetic": 0
+          },
+          "rf_aug": {
+            "Accuracy": 1.0,
+            "MacroF1": 1.0,
+            "N1_F1": 0.0,
+            "per_class_F1": {
+              "W": {
+                "F1": 1.0,
+                "Precision": 1.0,
+                "Recall": 1.0
+              }
+            },
+            "n_train": 8033,
+            "n_test": 913,
+            "n_synthetic": 0,
+            "delta_MacroF1": 0.0,
+            "delta_N1_F1": 0.0
+          }
+        },
+        "n_params_gen": 42788,
+        "n_params_disc": 705,
+        "history": {
+          "n_epochs_trained": 50,
+          "avg_time_per_epoch": 80.97,
+          "total_fold_time_s": 4048.6,
+          "final_gen_loss": -1.1366,
+          "final_disc_loss": 0.1423
+        }
+      },
+      {
+        "fold_idx": 6,
+        "test_subject": "EPCTL07.edf",
+        "collapsed": false,
+        "mae": {
+          "mean_MAE": 0.095,
+          "std_MAE": 0.063
+        },
+        "clf": {
+          "Accuracy": 0.5,
+          "Precision": 0.5,
+          "Sensitivity": 1.0,
+          "Specificity": 0.0,
+          "F1": 0.6667
+        },
+        "downstream": {
+          "svm_real": {
+            "error": "The number of classes has to be greater than one; got 1 class"
+          },
+          "svm_aug": {
+            "error": "The number of classes has to be greater than one; got 1 class"
+          },
+          "rf_real": {
+            "Accuracy": 1.0,
+            "MacroF1": 1.0,
+            "N1_F1": 0.0,
+            "per_class_F1": {
+              "W": {
+                "F1": 1.0,
+                "Precision": 1.0,
+                "Recall": 1.0
+              }
+            },
+            "n_train": 7971,
+            "n_test": 975,
+            "n_synthetic": 0
+          },
+          "rf_aug": {
+            "Accuracy": 1.0,
+            "MacroF1": 1.0,
+            "N1_F1": 0.0,
+            "per_class_F1": {
+              "W": {
+                "F1": 1.0,
+                "Precision": 1.0,
+                "Recall": 1.0
+              }
+            },
+            "n_train": 7971,
+            "n_test": 975,
+            "n_synthetic": 0,
+            "delta_MacroF1": 0.0,
+            "delta_N1_F1": 0.0
+          }
+        },
+        "n_params_gen": 42788,
+        "n_params_disc": 705,
+        "history": {
+          "n_epochs_trained": 50,
+          "avg_time_per_epoch": 80.41,
+          "total_fold_time_s": 4020.7,
+          "final_gen_loss": -1.9548,
+          "final_disc_loss": 0.0775
+        }
+      },
+      {
+        "fold_idx": 7,
+        "test_subject": "EPCTL09.edf",
+        "collapsed": false,
+        "mae": {
+          "mean_MAE": 0.0551,
+          "std_MAE": 0.0401
+        },
+        "clf": {
+          "Accuracy": 0.5,
+          "Precision": 0.5,
+          "Sensitivity": 1.0,
+          "Specificity": 0.0,
+          "F1": 0.6667
+        },
+        "downstream": {
+          "svm_real": {
+            "error": "The number of classes has to be greater than one; got 1 class"
+          },
+          "svm_aug": {
+            "error": "The number of classes has to be greater than one; got 1 class"
+          },
+          "rf_real": {
+            "Accuracy": 1.0,
+            "MacroF1": 1.0,
+            "N1_F1": 0.0,
+            "per_class_F1": {
+              "W": {
+                "F1": 1.0,
+                "Precision": 1.0,
+                "Recall": 1.0
+              }
+            },
+            "n_train": 8003,
+            "n_test": 943,
+            "n_synthetic": 0
+          },
+          "rf_aug": {
+            "Accuracy": 1.0,
+            "MacroF1": 1.0,
+            "N1_F1": 0.0,
+            "per_class_F1": {
+              "W": {
+                "F1": 1.0,
+                "Precision": 1.0,
+                "Recall": 1.0
+              }
+            },
+            "n_train": 8003,
+            "n_test": 943,
+            "n_synthetic": 0,
+            "delta_MacroF1": 0.0,
+            "delta_N1_F1": 0.0
+          }
+        },
+        "n_params_gen": 42788,
+        "n_params_disc": 705,
+        "history": {
+          "n_epochs_trained": 50,
+          "avg_time_per_epoch": 80.22,
+          "total_fold_time_s": 4011.2,
+          "final_gen_loss": -0.6952,
+          "final_disc_loss": 0.0483
+        }
+      },
+      {
+        "fold_idx": 8,
+        "test_subject": "EPCTL10.edf",
+        "collapsed": true,
+        "mae": {
+          "mean_MAE": 0.0137,
+          "std_MAE": 0.0178
+        },
+        "clf": {
+          "Accuracy": 0.5,
+          "Precision": 0.0,
+          "Sensitivity": 0.0,
+          "Specificity": 1.0,
+          "F1": 0.0
+        },
+        "downstream": {
+          "svm_real": {
+            "error": "The number of classes has to be greater than one; got 1 class"
+          },
+          "svm_aug": {
+            "error": "The number of classes has to be greater than one; got 1 class"
+          },
+          "rf_real": {
+            "Accuracy": 1.0,
+            "MacroF1": 1.0,
+            "N1_F1": 0.0,
+            "per_class_F1": {
+              "W": {
+                "F1": 1.0,
+                "Precision": 1.0,
+                "Recall": 1.0
+              }
+            },
+            "n_train": 8000,
+            "n_test": 946,
+            "n_synthetic": 0
+          },
+          "rf_aug": {
+            "Accuracy": 1.0,
+            "MacroF1": 1.0,
+            "N1_F1": 0.0,
+            "per_class_F1": {
+              "W": {
+                "F1": 1.0,
+                "Precision": 1.0,
+                "Recall": 1.0
+              }
+            },
+            "n_train": 8000,
+            "n_test": 946,
+            "n_synthetic": 0,
+            "delta_MacroF1": 0.0,
+            "delta_N1_F1": 0.0
+          }
+        },
+        "n_params_gen": 42788,
+        "n_params_disc": 705,
+        "history": {
+          "n_epochs_trained": 50,
+          "avg_time_per_epoch": 80.26,
+          "total_fold_time_s": 4012.9,
+          "final_gen_loss": 0.6468,
+          "final_disc_loss": 0.0684
+        }
+      },
+      {
+        "fold_idx": 9,
+        "test_subject": "EPCTL11.edf",
+        "collapsed": false,
+        "mae": {
+          "mean_MAE": 0.5056,
+          "std_MAE": 0.0785
+        },
+        "clf": {
+          "Accuracy": 1.0,
+          "Precision": 1.0,
+          "Sensitivity": 1.0,
+          "Specificity": 1.0,
+          "F1": 1.0
+        },
+        "downstream": {
+          "svm_real": {
+            "error": "The number of classes has to be greater than one; got 1 class"
+          },
+          "svm_aug": {
+            "error": "The number of classes has to be greater than one; got 1 class"
+          },
+          "rf_real": {
+            "Accuracy": 1.0,
+            "MacroF1": 1.0,
+            "N1_F1": 0.0,
+            "per_class_F1": {
+              "W": {
+                "F1": 1.0,
+                "Precision": 1.0,
+                "Recall": 1.0
+              }
+            },
+            "n_train": 8159,
+            "n_test": 787,
+            "n_synthetic": 0
+          },
+          "rf_aug": {
+            "Accuracy": 1.0,
+            "MacroF1": 1.0,
+            "N1_F1": 0.0,
+            "per_class_F1": {
+              "W": {
+                "F1": 1.0,
+                "Precision": 1.0,
+                "Recall": 1.0
+              }
+            },
+            "n_train": 8159,
+            "n_test": 787,
+            "n_synthetic": 0,
+            "delta_MacroF1": 0.0,
+            "delta_N1_F1": 0.0
+          }
+        },
+        "n_params_gen": 42788,
+        "n_params_disc": 705,
+        "history": {
+          "n_epochs_trained": 50,
+          "avg_time_per_epoch": 81.88,
+          "total_fold_time_s": 4093.9,
+          "final_gen_loss": -1.6887,
+          "final_disc_loss": 0.0898
+        }
+      }
+    ],
+    "aggregated": {
+      "mean_MAE": {
+        "mean": 0.2861,
+        "std": 0.3038,
+        "all": [
+          0.1573,
+          0.291,
+          0.0557,
+          0.1236,
+          1.0297,
+          0.5343,
+          0.095,
+          0.0551,
+          0.0137,
+          0.5056
+        ]
+      },
+      "std_MAE": {
+        "mean": 0.07,
+        "std": 0.0509,
+        "all": [
+          0.0754,
+          0.2022,
+          0.0214,
+          0.0567,
+          0.1051,
+          0.0397,
+          0.063,
+          0.0401,
+          0.0178,
+          0.0785
+        ]
+      },
+      "Accuracy": {
+        "mean": 0.648,
+        "std": 0.2261,
+        "all": [
+          0.5,
+          0.985,
+          0.5,
+          0.5,
+          0.995,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          1.0
+        ]
+      },
+      "Precision": {
+        "mean": 0.6,
+        "std": 0.3,
+        "all": [
+          0.5,
+          1.0,
+          0.5,
+          0.5,
+          1.0,
+          0.5,
+          0.5,
+          0.5,
+          0.0,
+          1.0
+        ]
+      },
+      "Sensitivity": {
+        "mean": 0.896,
+        "std": 0.2988,
+        "all": [
+          1.0,
+          0.97,
+          1.0,
+          1.0,
+          0.99,
+          1.0,
+          1.0,
+          1.0,
+          0.0,
+          1.0
+        ]
+      },
+      "Specificity": {
+        "mean": 0.4,
+        "std": 0.4899,
+        "all": [
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          1.0
+        ]
+      },
+      "F1": {
+        "mean": 0.698,
+        "std": 0.2747,
+        "all": [
+          0.6667,
+          0.9848,
+          0.6667,
+          0.6667,
+          0.995,
+          0.6667,
+          0.6667,
+          0.6667,
+          0.0,
+          1.0
+        ]
+      },
+      "avg_time_per_epoch": {
+        "mean": 80.982,
+        "std": 0.9855,
+        "all": [
+          80.37,
+          79.27,
+          82.07,
+          81.97,
+          82.4,
+          80.97,
+          80.41,
+          80.22,
+          80.26,
+          81.88
+        ]
+      },
+      "downstream_rf_aug_MacroF1": {
+        "mean": 1.0,
+        "std": 0.0,
+        "all": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "downstream_rf_aug_N1_F1": {
+        "mean": 0.0,
+        "std": 0.0,
+        "all": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ]
+      },
+      "downstream_rf_aug_delta_MacroF1": {
+        "mean": 0.0,
+        "std": 0.0,
+        "all": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ]
+      },
+      "downstream_rf_aug_delta_N1_F1": {
+        "mean": 0.0,
+        "std": 0.0,
+        "all": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ]
+      },
+      "downstream_rf_real_MacroF1": {
+        "mean": 1.0,
+        "std": 0.0,
+        "all": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "n_params_gen": 42788,
+      "n_params_disc": 705
+    }
+  }
+}
