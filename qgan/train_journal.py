@@ -68,6 +68,20 @@
 #   RUN EXPRESSIBILITY SWEEP (once, before training):
 #     python -m qgan.train_journal --expressibility-only
 
+# CPU_EPOCHS=50 QPU_EPOCHS=50 python -m qgan.train_journal --mode full --conditions all
+
+# Job 1: CPU conditions only (fast, will finish in ~3-4 days)
+# CPU_EPOCHS=50 python -m qgan.train_journal --mode full --conditions cpu
+
+# Job 2: QPU sim only (slow, submit separately)
+# QPU_EPOCHS=50 python -m qgan.train_journal --mode full --conditions qpu
+
+# Three separate jobs, one per feature set
+#FEATURE_SET=statistical CPU_EPOCHS=50 python -m qgan.train_journal --mode full --conditions cpu
+#FEATURE_SET=spectral    CPU_EPOCHS=50 python -m qgan.train_journal --mode full --conditions cpu
+#FEATURE_SET=combined    CPU_EPOCHS=50 python -m qgan.train_journal --mode full --conditions cpu
+
+
 import argparse
 import copy
 import json
@@ -862,7 +876,7 @@ def main():
     else:
         n_epochs_cpu  = int(os.getenv("CPU_EPOCHS", "50"))
         n_epochs_qpu  = int(os.getenv("QPU_EPOCHS", "100"))
-        subject_paths = [p for p in subject_paths if os.path.exists(p)]
+        subject_paths = [p for p in SUBJECT_PATHS if os.path.exists(p)] #update this line on the real code at 4 june 
         print(f"\n  MODE: FULL | CPU_EPOCHS={n_epochs_cpu} "
               f"QPU_EPOCHS={n_epochs_qpu}")
         print(f"  Feature sets: {feature_sets}")

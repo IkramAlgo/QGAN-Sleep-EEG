@@ -592,7 +592,12 @@ def compute_expressibility(n_qubits: int = 6,
     if n_layers is None:
         n_layers = N_LAYERS
 
-    dev = qml.device("default.qubit", wires=n_qubits)
+    #dev = qml.device("default.qubit", wires=n_qubits)  # BEFORE (slow):
+    # AFTER (10-50× faster for noiseless):
+    try:
+        dev = qml.device("lightning.qubit", wires=n_qubits)
+    except Exception:
+        dev = qml.device("default.qubit", wires=n_qubits)
 
     @qml.qnode(dev, interface="numpy")
     def statevec(inputs, weights):
