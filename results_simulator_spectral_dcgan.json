@@ -1,0 +1,2012 @@
+{
+  "spectral_5feat": {
+    "n_features": 5,
+    "feature_set": "spectral",
+    "condition": "simulator",
+    "generator_type": "dcgan",
+    "folds": [
+      {
+        "fold_idx": 0,
+        "test_subject": "EPCTL01.edf",
+        "collapsed": false,
+        "mae": {
+          "mean_MAE": 0.0838,
+          "std_MAE": 0.0494
+        },
+        "clf": {
+          "Accuracy": 0.5,
+          "Precision": 0.5,
+          "Sensitivity": 1.0,
+          "Specificity": 0.0,
+          "F1": 0.6667
+        },
+        "downstream": {
+          "svm_real": {
+            "Accuracy": 0.7889,
+            "MacroF1": 0.6634,
+            "N1_F1": 0.2407,
+            "per_class_F1": {
+              "W": {
+                "F1": 0.5946,
+                "Precision": 0.7857,
+                "Recall": 0.4783
+              },
+              "N1": {
+                "F1": 0.2407,
+                "Precision": 0.3824,
+                "Recall": 0.1757
+              },
+              "N2": {
+                "F1": 0.85,
+                "Precision": 0.8708,
+                "Recall": 0.8301
+              },
+              "N3": {
+                "F1": 0.7619,
+                "Precision": 0.6562,
+                "Recall": 0.9081
+              },
+              "REM": {
+                "F1": 0.8698,
+                "Precision": 0.8486,
+                "Recall": 0.892
+              }
+            },
+            "n_train": 15370,
+            "n_test": 952,
+            "n_synthetic": 0
+          },
+          "svm_aug": {
+            "Accuracy": 0.7889,
+            "MacroF1": 0.6634,
+            "N1_F1": 0.2407,
+            "per_class_F1": {
+              "W": {
+                "F1": 0.5946,
+                "Precision": 0.7857,
+                "Recall": 0.4783
+              },
+              "N1": {
+                "F1": 0.2407,
+                "Precision": 0.3824,
+                "Recall": 0.1757
+              },
+              "N2": {
+                "F1": 0.85,
+                "Precision": 0.8708,
+                "Recall": 0.8301
+              },
+              "N3": {
+                "F1": 0.7619,
+                "Precision": 0.6562,
+                "Recall": 0.9081
+              },
+              "REM": {
+                "F1": 0.8698,
+                "Precision": 0.8486,
+                "Recall": 0.892
+              }
+            },
+            "n_train": 15370,
+            "n_test": 952,
+            "n_synthetic": 0,
+            "delta_MacroF1": 0.0,
+            "delta_N1_F1": 0.0
+          },
+          "rf_real": {
+            "Accuracy": 0.7195,
+            "MacroF1": 0.6033,
+            "N1_F1": 0.1964,
+            "per_class_F1": {
+              "W": {
+                "F1": 0.6329,
+                "Precision": 0.7576,
+                "Recall": 0.5435
+              },
+              "N1": {
+                "F1": 0.1964,
+                "Precision": 0.2895,
+                "Recall": 0.1486
+              },
+              "N2": {
+                "F1": 0.7976,
+                "Precision": 0.7519,
+                "Recall": 0.8493
+              },
+              "N3": {
+                "F1": 0.7321,
+                "Precision": 0.6567,
+                "Recall": 0.827
+              },
+              "REM": {
+                "F1": 0.6575,
+                "Precision": 0.8276,
+                "Recall": 0.5455
+              }
+            },
+            "n_train": 15370,
+            "n_test": 952,
+            "n_synthetic": 0
+          },
+          "rf_aug": {
+            "Accuracy": 0.7195,
+            "MacroF1": 0.6033,
+            "N1_F1": 0.1964,
+            "per_class_F1": {
+              "W": {
+                "F1": 0.6329,
+                "Precision": 0.7576,
+                "Recall": 0.5435
+              },
+              "N1": {
+                "F1": 0.1964,
+                "Precision": 0.2895,
+                "Recall": 0.1486
+              },
+              "N2": {
+                "F1": 0.7976,
+                "Precision": 0.7519,
+                "Recall": 0.8493
+              },
+              "N3": {
+                "F1": 0.7321,
+                "Precision": 0.6567,
+                "Recall": 0.827
+              },
+              "REM": {
+                "F1": 0.6575,
+                "Precision": 0.8276,
+                "Recall": 0.5455
+              }
+            },
+            "n_train": 15370,
+            "n_test": 952,
+            "n_synthetic": 0,
+            "delta_MacroF1": 0.0,
+            "delta_N1_F1": 0.0
+          }
+        },
+        "n_params_gen": 43141,
+        "n_params_disc": 737,
+        "history": {
+          "n_epochs_trained": 50,
+          "avg_time_per_epoch": 155.76,
+          "total_fold_time_s": 7787.9,
+          "final_gen_loss": -0.8476,
+          "final_disc_loss": 0.0686
+        }
+      },
+      {
+        "fold_idx": 1,
+        "test_subject": "EPCTL02.edf",
+        "collapsed": false,
+        "mae": {
+          "mean_MAE": 0.0722,
+          "std_MAE": 0.0315
+        },
+        "clf": {
+          "Accuracy": 0.5,
+          "Precision": 0.5,
+          "Sensitivity": 1.0,
+          "Specificity": 0.0,
+          "F1": 0.6667
+        },
+        "downstream": {
+          "svm_real": {
+            "Accuracy": 0.7414,
+            "MacroF1": 0.6298,
+            "N1_F1": 0.3304,
+            "per_class_F1": {
+              "W": {
+                "F1": 0.6596,
+                "Precision": 0.5612,
+                "Recall": 0.8
+              },
+              "N1": {
+                "F1": 0.3304,
+                "Precision": 0.6129,
+                "Recall": 0.2262
+              },
+              "N2": {
+                "F1": 0.8555,
+                "Precision": 0.9716,
+                "Recall": 0.7642
+              },
+              "N3": {
+                "F1": 0.8333,
+                "Precision": 0.7692,
+                "Recall": 0.9091
+              },
+              "REM": {
+                "F1": 0.4699,
+                "Precision": 0.3805,
+                "Recall": 0.6143
+              }
+            },
+            "n_train": 15265,
+            "n_test": 1017,
+            "n_synthetic": 0
+          },
+          "svm_aug": {
+            "Accuracy": 0.7414,
+            "MacroF1": 0.6298,
+            "N1_F1": 0.3304,
+            "per_class_F1": {
+              "W": {
+                "F1": 0.6596,
+                "Precision": 0.5612,
+                "Recall": 0.8
+              },
+              "N1": {
+                "F1": 0.3304,
+                "Precision": 0.6129,
+                "Recall": 0.2262
+              },
+              "N2": {
+                "F1": 0.8555,
+                "Precision": 0.9716,
+                "Recall": 0.7642
+              },
+              "N3": {
+                "F1": 0.8333,
+                "Precision": 0.7692,
+                "Recall": 0.9091
+              },
+              "REM": {
+                "F1": 0.4699,
+                "Precision": 0.3805,
+                "Recall": 0.6143
+              }
+            },
+            "n_train": 15265,
+            "n_test": 1017,
+            "n_synthetic": 0,
+            "delta_MacroF1": 0.0,
+            "delta_N1_F1": 0.0
+          },
+          "rf_real": {
+            "Accuracy": 0.7729,
+            "MacroF1": 0.6428,
+            "N1_F1": 0.2667,
+            "per_class_F1": {
+              "W": {
+                "F1": 0.7564,
+                "Precision": 0.6484,
+                "Recall": 0.9077
+              },
+              "N1": {
+                "F1": 0.2667,
+                "Precision": 0.3529,
+                "Recall": 0.2143
+              },
+              "N2": {
+                "F1": 0.871,
+                "Precision": 0.9075,
+                "Recall": 0.8374
+              },
+              "N3": {
+                "F1": 0.8415,
+                "Precision": 0.8538,
+                "Recall": 0.8295
+              },
+              "REM": {
+                "F1": 0.4783,
+                "Precision": 0.4853,
+                "Recall": 0.4714
+              }
+            },
+            "n_train": 15265,
+            "n_test": 1017,
+            "n_synthetic": 0
+          },
+          "rf_aug": {
+            "Accuracy": 0.7729,
+            "MacroF1": 0.6428,
+            "N1_F1": 0.2667,
+            "per_class_F1": {
+              "W": {
+                "F1": 0.7564,
+                "Precision": 0.6484,
+                "Recall": 0.9077
+              },
+              "N1": {
+                "F1": 0.2667,
+                "Precision": 0.3529,
+                "Recall": 0.2143
+              },
+              "N2": {
+                "F1": 0.871,
+                "Precision": 0.9075,
+                "Recall": 0.8374
+              },
+              "N3": {
+                "F1": 0.8415,
+                "Precision": 0.8538,
+                "Recall": 0.8295
+              },
+              "REM": {
+                "F1": 0.4783,
+                "Precision": 0.4853,
+                "Recall": 0.4714
+              }
+            },
+            "n_train": 15265,
+            "n_test": 1017,
+            "n_synthetic": 0,
+            "delta_MacroF1": 0.0,
+            "delta_N1_F1": 0.0
+          }
+        },
+        "n_params_gen": 43141,
+        "n_params_disc": 737,
+        "history": {
+          "n_epochs_trained": 50,
+          "avg_time_per_epoch": 154.9,
+          "total_fold_time_s": 7744.9,
+          "final_gen_loss": -0.7885,
+          "final_disc_loss": 0.0513
+        }
+      },
+      {
+        "fold_idx": 2,
+        "test_subject": "EPCTL03.edf",
+        "collapsed": false,
+        "mae": {
+          "mean_MAE": 0.0854,
+          "std_MAE": 0.0495
+        },
+        "clf": {
+          "Accuracy": 0.5,
+          "Precision": 0.5,
+          "Sensitivity": 1.0,
+          "Specificity": 0.0,
+          "F1": 0.6667
+        },
+        "downstream": {
+          "svm_real": {
+            "Accuracy": 0.6807,
+            "MacroF1": 0.5738,
+            "N1_F1": 0.275,
+            "per_class_F1": {
+              "W": {
+                "F1": 0.4925,
+                "Precision": 0.4231,
+                "Recall": 0.5893
+              },
+              "N1": {
+                "F1": 0.275,
+                "Precision": 0.234,
+                "Recall": 0.3333
+              },
+              "N2": {
+                "F1": 0.7573,
+                "Precision": 0.7971,
+                "Recall": 0.7213
+              },
+              "N3": {
+                "F1": 0.8468,
+                "Precision": 0.7567,
+                "Recall": 0.9614
+              },
+              "REM": {
+                "F1": 0.4972,
+                "Precision": 0.88,
+                "Recall": 0.3465
+              }
+            },
+            "n_train": 16200,
+            "n_test": 761,
+            "n_synthetic": 0
+          },
+          "svm_aug": {
+            "Accuracy": 0.6807,
+            "MacroF1": 0.5738,
+            "N1_F1": 0.275,
+            "per_class_F1": {
+              "W": {
+                "F1": 0.4925,
+                "Precision": 0.4231,
+                "Recall": 0.5893
+              },
+              "N1": {
+                "F1": 0.275,
+                "Precision": 0.234,
+                "Recall": 0.3333
+              },
+              "N2": {
+                "F1": 0.7573,
+                "Precision": 0.7971,
+                "Recall": 0.7213
+              },
+              "N3": {
+                "F1": 0.8468,
+                "Precision": 0.7567,
+                "Recall": 0.9614
+              },
+              "REM": {
+                "F1": 0.4972,
+                "Precision": 0.88,
+                "Recall": 0.3465
+              }
+            },
+            "n_train": 16200,
+            "n_test": 761,
+            "n_synthetic": 0,
+            "delta_MacroF1": 0.0,
+            "delta_N1_F1": 0.0
+          },
+          "rf_real": {
+            "Accuracy": 0.682,
+            "MacroF1": 0.5329,
+            "N1_F1": 0.0909,
+            "per_class_F1": {
+              "W": {
+                "F1": 0.4878,
+                "Precision": 0.3704,
+                "Recall": 0.7143
+              },
+              "N1": {
+                "F1": 0.0909,
+                "Precision": 0.1136,
+                "Recall": 0.0758
+              },
+              "N2": {
+                "F1": 0.7548,
+                "Precision": 0.7337,
+                "Recall": 0.777
+              },
+              "N3": {
+                "F1": 0.8864,
+                "Precision": 0.8223,
+                "Recall": 0.9614
+              },
+              "REM": {
+                "F1": 0.4444,
+                "Precision": 0.8636,
+                "Recall": 0.2992
+              }
+            },
+            "n_train": 16200,
+            "n_test": 761,
+            "n_synthetic": 0
+          },
+          "rf_aug": {
+            "Accuracy": 0.682,
+            "MacroF1": 0.5329,
+            "N1_F1": 0.0909,
+            "per_class_F1": {
+              "W": {
+                "F1": 0.4878,
+                "Precision": 0.3704,
+                "Recall": 0.7143
+              },
+              "N1": {
+                "F1": 0.0909,
+                "Precision": 0.1136,
+                "Recall": 0.0758
+              },
+              "N2": {
+                "F1": 0.7548,
+                "Precision": 0.7337,
+                "Recall": 0.777
+              },
+              "N3": {
+                "F1": 0.8864,
+                "Precision": 0.8223,
+                "Recall": 0.9614
+              },
+              "REM": {
+                "F1": 0.4444,
+                "Precision": 0.8636,
+                "Recall": 0.2992
+              }
+            },
+            "n_train": 16200,
+            "n_test": 761,
+            "n_synthetic": 0,
+            "delta_MacroF1": 0.0,
+            "delta_N1_F1": 0.0
+          }
+        },
+        "n_params_gen": 43141,
+        "n_params_disc": 737,
+        "history": {
+          "n_epochs_trained": 50,
+          "avg_time_per_epoch": 163.87,
+          "total_fold_time_s": 8193.3,
+          "final_gen_loss": -1.372,
+          "final_disc_loss": 0.0587
+        }
+      },
+      {
+        "fold_idx": 3,
+        "test_subject": "EPCTL04.edf",
+        "collapsed": false,
+        "mae": {
+          "mean_MAE": 0.0416,
+          "std_MAE": 0.0602
+        },
+        "clf": {
+          "Accuracy": 0.5,
+          "Precision": 0.5,
+          "Sensitivity": 1.0,
+          "Specificity": 0.0,
+          "F1": 0.6667
+        },
+        "downstream": {
+          "svm_real": {
+            "Accuracy": 0.5959,
+            "MacroF1": 0.5674,
+            "N1_F1": 0.2376,
+            "per_class_F1": {
+              "W": {
+                "F1": 0.5851,
+                "Precision": 0.9159,
+                "Recall": 0.4298
+              },
+              "N1": {
+                "F1": 0.2376,
+                "Precision": 0.2243,
+                "Recall": 0.2526
+              },
+              "N2": {
+                "F1": 0.7222,
+                "Precision": 0.7156,
+                "Recall": 0.729
+              },
+              "N3": {
+                "F1": 0.8033,
+                "Precision": 0.8348,
+                "Recall": 0.7742
+              },
+              "REM": {
+                "F1": 0.4885,
+                "Precision": 0.3404,
+                "Recall": 0.8649
+              }
+            },
+            "n_train": 16655,
+            "n_test": 735,
+            "n_synthetic": 0
+          },
+          "svm_aug": {
+            "Accuracy": 0.5959,
+            "MacroF1": 0.5674,
+            "N1_F1": 0.2376,
+            "per_class_F1": {
+              "W": {
+                "F1": 0.5851,
+                "Precision": 0.9159,
+                "Recall": 0.4298
+              },
+              "N1": {
+                "F1": 0.2376,
+                "Precision": 0.2243,
+                "Recall": 0.2526
+              },
+              "N2": {
+                "F1": 0.7222,
+                "Precision": 0.7156,
+                "Recall": 0.729
+              },
+              "N3": {
+                "F1": 0.8033,
+                "Precision": 0.8348,
+                "Recall": 0.7742
+              },
+              "REM": {
+                "F1": 0.4885,
+                "Precision": 0.3404,
+                "Recall": 0.8649
+              }
+            },
+            "n_train": 16655,
+            "n_test": 735,
+            "n_synthetic": 0,
+            "delta_MacroF1": 0.0,
+            "delta_N1_F1": 0.0
+          },
+          "rf_real": {
+            "Accuracy": 0.6245,
+            "MacroF1": 0.5934,
+            "N1_F1": 0.3616,
+            "per_class_F1": {
+              "W": {
+                "F1": 0.6616,
+                "Precision": 0.7879,
+                "Recall": 0.5702
+              },
+              "N1": {
+                "F1": 0.3616,
+                "Precision": 0.3902,
+                "Recall": 0.3368
+              },
+              "N2": {
+                "F1": 0.6818,
+                "Precision": 0.6111,
+                "Recall": 0.771
+              },
+              "N3": {
+                "F1": 0.757,
+                "Precision": 0.9,
+                "Recall": 0.6532
+              },
+              "REM": {
+                "F1": 0.505,
+                "Precision": 0.3984,
+                "Recall": 0.6892
+              }
+            },
+            "n_train": 16655,
+            "n_test": 735,
+            "n_synthetic": 0
+          },
+          "rf_aug": {
+            "Accuracy": 0.6245,
+            "MacroF1": 0.5934,
+            "N1_F1": 0.3616,
+            "per_class_F1": {
+              "W": {
+                "F1": 0.6616,
+                "Precision": 0.7879,
+                "Recall": 0.5702
+              },
+              "N1": {
+                "F1": 0.3616,
+                "Precision": 0.3902,
+                "Recall": 0.3368
+              },
+              "N2": {
+                "F1": 0.6818,
+                "Precision": 0.6111,
+                "Recall": 0.771
+              },
+              "N3": {
+                "F1": 0.757,
+                "Precision": 0.9,
+                "Recall": 0.6532
+              },
+              "REM": {
+                "F1": 0.505,
+                "Precision": 0.3984,
+                "Recall": 0.6892
+              }
+            },
+            "n_train": 16655,
+            "n_test": 735,
+            "n_synthetic": 0,
+            "delta_MacroF1": 0.0,
+            "delta_N1_F1": 0.0
+          }
+        },
+        "n_params_gen": 43141,
+        "n_params_disc": 737,
+        "history": {
+          "n_epochs_trained": 50,
+          "avg_time_per_epoch": 168.36,
+          "total_fold_time_s": 8418.2,
+          "final_gen_loss": -2.5848,
+          "final_disc_loss": 0.0388
+        }
+      },
+      {
+        "fold_idx": 4,
+        "test_subject": "EPCTL05.edf",
+        "collapsed": false,
+        "mae": {
+          "mean_MAE": 0.0249,
+          "std_MAE": 0.093
+        },
+        "clf": {
+          "Accuracy": 0.5,
+          "Precision": 0.5,
+          "Sensitivity": 1.0,
+          "Specificity": 0.0,
+          "F1": 0.6667
+        },
+        "downstream": {
+          "svm_real": {
+            "Accuracy": 0.5898,
+            "MacroF1": 0.5445,
+            "N1_F1": 0.1379,
+            "per_class_F1": {
+              "W": {
+                "F1": 0.6737,
+                "Precision": 0.6667,
+                "Recall": 0.6809
+              },
+              "N1": {
+                "F1": 0.1379,
+                "Precision": 0.1778,
+                "Recall": 0.1127
+              },
+              "N2": {
+                "F1": 0.5215,
+                "Precision": 0.8712,
+                "Recall": 0.3722
+              },
+              "N3": {
+                "F1": 0.8401,
+                "Precision": 0.7789,
+                "Recall": 0.9118
+              },
+              "REM": {
+                "F1": 0.5492,
+                "Precision": 0.3934,
+                "Recall": 0.9091
+              }
+            },
+            "n_train": 16180,
+            "n_test": 729,
+            "n_synthetic": 0
+          },
+          "svm_aug": {
+            "Accuracy": 0.5898,
+            "MacroF1": 0.5445,
+            "N1_F1": 0.1379,
+            "per_class_F1": {
+              "W": {
+                "F1": 0.6737,
+                "Precision": 0.6667,
+                "Recall": 0.6809
+              },
+              "N1": {
+                "F1": 0.1379,
+                "Precision": 0.1778,
+                "Recall": 0.1127
+              },
+              "N2": {
+                "F1": 0.5215,
+                "Precision": 0.8712,
+                "Recall": 0.3722
+              },
+              "N3": {
+                "F1": 0.8401,
+                "Precision": 0.7789,
+                "Recall": 0.9118
+              },
+              "REM": {
+                "F1": 0.5492,
+                "Precision": 0.3934,
+                "Recall": 0.9091
+              }
+            },
+            "n_train": 16180,
+            "n_test": 729,
+            "n_synthetic": 0,
+            "delta_MacroF1": 0.0,
+            "delta_N1_F1": 0.0
+          },
+          "rf_real": {
+            "Accuracy": 0.6722,
+            "MacroF1": 0.5978,
+            "N1_F1": 0.2439,
+            "per_class_F1": {
+              "W": {
+                "F1": 0.5766,
+                "Precision": 0.5,
+                "Recall": 0.6809
+              },
+              "N1": {
+                "F1": 0.2439,
+                "Precision": 0.2885,
+                "Recall": 0.2113
+              },
+              "N2": {
+                "F1": 0.7252,
+                "Precision": 0.8837,
+                "Recall": 0.6149
+              },
+              "N3": {
+                "F1": 0.8555,
+                "Precision": 0.8251,
+                "Recall": 0.8882
+              },
+              "REM": {
+                "F1": 0.5879,
+                "Precision": 0.4744,
+                "Recall": 0.7727
+              }
+            },
+            "n_train": 16180,
+            "n_test": 729,
+            "n_synthetic": 0
+          },
+          "rf_aug": {
+            "Accuracy": 0.6722,
+            "MacroF1": 0.5978,
+            "N1_F1": 0.2439,
+            "per_class_F1": {
+              "W": {
+                "F1": 0.5766,
+                "Precision": 0.5,
+                "Recall": 0.6809
+              },
+              "N1": {
+                "F1": 0.2439,
+                "Precision": 0.2885,
+                "Recall": 0.2113
+              },
+              "N2": {
+                "F1": 0.7252,
+                "Precision": 0.8837,
+                "Recall": 0.6149
+              },
+              "N3": {
+                "F1": 0.8555,
+                "Precision": 0.8251,
+                "Recall": 0.8882
+              },
+              "REM": {
+                "F1": 0.5879,
+                "Precision": 0.4744,
+                "Recall": 0.7727
+              }
+            },
+            "n_train": 16180,
+            "n_test": 729,
+            "n_synthetic": 0,
+            "delta_MacroF1": 0.0,
+            "delta_N1_F1": 0.0
+          }
+        },
+        "n_params_gen": 43141,
+        "n_params_disc": 737,
+        "history": {
+          "n_epochs_trained": 50,
+          "avg_time_per_epoch": 163.62,
+          "total_fold_time_s": 8180.8,
+          "final_gen_loss": -1.3676,
+          "final_disc_loss": 0.0299
+        }
+      },
+      {
+        "fold_idx": 5,
+        "test_subject": "EPCTL06.edf",
+        "collapsed": false,
+        "mae": {
+          "mean_MAE": 0.0194,
+          "std_MAE": 0.0183
+        },
+        "clf": {
+          "Accuracy": 0.5,
+          "Precision": 0.5,
+          "Sensitivity": 1.0,
+          "Specificity": 0.0,
+          "F1": 0.6667
+        },
+        "downstream": {
+          "svm_real": {
+            "Accuracy": 0.7054,
+            "MacroF1": 0.5427,
+            "N1_F1": 0.0,
+            "per_class_F1": {
+              "W": {
+                "F1": 0.3483,
+                "Precision": 0.6481,
+                "Recall": 0.2381
+              },
+              "N1": {
+                "F1": 0.0,
+                "Precision": 0.0,
+                "Recall": 0.0
+              },
+              "N2": {
+                "F1": 0.8969,
+                "Precision": 0.936,
+                "Recall": 0.861
+              },
+              "N3": {
+                "F1": 0.8535,
+                "Precision": 0.8375,
+                "Recall": 0.8701
+              },
+              "REM": {
+                "F1": 0.6147,
+                "Precision": 0.4437,
+                "Recall": 1.0
+              }
+            },
+            "n_train": 15855,
+            "n_test": 886,
+            "n_synthetic": 0
+          },
+          "svm_aug": {
+            "Accuracy": 0.7054,
+            "MacroF1": 0.5427,
+            "N1_F1": 0.0,
+            "per_class_F1": {
+              "W": {
+                "F1": 0.3483,
+                "Precision": 0.6481,
+                "Recall": 0.2381
+              },
+              "N1": {
+                "F1": 0.0,
+                "Precision": 0.0,
+                "Recall": 0.0
+              },
+              "N2": {
+                "F1": 0.8969,
+                "Precision": 0.936,
+                "Recall": 0.861
+              },
+              "N3": {
+                "F1": 0.8535,
+                "Precision": 0.8375,
+                "Recall": 0.8701
+              },
+              "REM": {
+                "F1": 0.6147,
+                "Precision": 0.4437,
+                "Recall": 1.0
+              }
+            },
+            "n_train": 15855,
+            "n_test": 886,
+            "n_synthetic": 0,
+            "delta_MacroF1": 0.0,
+            "delta_N1_F1": 0.0
+          },
+          "rf_real": {
+            "Accuracy": 0.7867,
+            "MacroF1": 0.7083,
+            "N1_F1": 0.355,
+            "per_class_F1": {
+              "W": {
+                "F1": 0.6489,
+                "Precision": 0.7391,
+                "Recall": 0.5782
+              },
+              "N1": {
+                "F1": 0.355,
+                "Precision": 0.3261,
+                "Recall": 0.3896
+              },
+              "N2": {
+                "F1": 0.9101,
+                "Precision": 0.9005,
+                "Recall": 0.9198
+              },
+              "N3": {
+                "F1": 0.863,
+                "Precision": 0.913,
+                "Recall": 0.8182
+              },
+              "REM": {
+                "F1": 0.7645,
+                "Precision": 0.7044,
+                "Recall": 0.8358
+              }
+            },
+            "n_train": 15855,
+            "n_test": 886,
+            "n_synthetic": 0
+          },
+          "rf_aug": {
+            "Accuracy": 0.7867,
+            "MacroF1": 0.7083,
+            "N1_F1": 0.355,
+            "per_class_F1": {
+              "W": {
+                "F1": 0.6489,
+                "Precision": 0.7391,
+                "Recall": 0.5782
+              },
+              "N1": {
+                "F1": 0.355,
+                "Precision": 0.3261,
+                "Recall": 0.3896
+              },
+              "N2": {
+                "F1": 0.9101,
+                "Precision": 0.9005,
+                "Recall": 0.9198
+              },
+              "N3": {
+                "F1": 0.863,
+                "Precision": 0.913,
+                "Recall": 0.8182
+              },
+              "REM": {
+                "F1": 0.7645,
+                "Precision": 0.7044,
+                "Recall": 0.8358
+              }
+            },
+            "n_train": 15855,
+            "n_test": 886,
+            "n_synthetic": 0,
+            "delta_MacroF1": 0.0,
+            "delta_N1_F1": 0.0
+          }
+        },
+        "n_params_gen": 43141,
+        "n_params_disc": 737,
+        "history": {
+          "n_epochs_trained": 50,
+          "avg_time_per_epoch": 160.23,
+          "total_fold_time_s": 8011.5,
+          "final_gen_loss": -1.7065,
+          "final_disc_loss": 0.0509
+        }
+      },
+      {
+        "fold_idx": 6,
+        "test_subject": "EPCTL07.edf",
+        "collapsed": false,
+        "mae": {
+          "mean_MAE": 0.0735,
+          "std_MAE": 0.0588
+        },
+        "clf": {
+          "Accuracy": 0.5,
+          "Precision": 0.5,
+          "Sensitivity": 1.0,
+          "Specificity": 0.0,
+          "F1": 0.6667
+        },
+        "downstream": {
+          "svm_real": {
+            "Accuracy": 0.514,
+            "MacroF1": 0.4625,
+            "N1_F1": 0.1895,
+            "per_class_F1": {
+              "W": {
+                "F1": 0.3786,
+                "Precision": 0.4194,
+                "Recall": 0.3451
+              },
+              "N1": {
+                "F1": 0.1895,
+                "Precision": 0.1429,
+                "Recall": 0.2812
+              },
+              "N2": {
+                "F1": 0.5733,
+                "Precision": 0.8111,
+                "Recall": 0.4433
+              },
+              "N3": {
+                "F1": 0.7869,
+                "Precision": 0.6829,
+                "Recall": 0.9282
+              },
+              "REM": {
+                "F1": 0.384,
+                "Precision": 0.3288,
+                "Recall": 0.4615
+              }
+            },
+            "n_train": 15740,
+            "n_test": 891,
+            "n_synthetic": 0
+          },
+          "svm_aug": {
+            "Accuracy": 0.514,
+            "MacroF1": 0.4625,
+            "N1_F1": 0.1895,
+            "per_class_F1": {
+              "W": {
+                "F1": 0.3786,
+                "Precision": 0.4194,
+                "Recall": 0.3451
+              },
+              "N1": {
+                "F1": 0.1895,
+                "Precision": 0.1429,
+                "Recall": 0.2812
+              },
+              "N2": {
+                "F1": 0.5733,
+                "Precision": 0.8111,
+                "Recall": 0.4433
+              },
+              "N3": {
+                "F1": 0.7869,
+                "Precision": 0.6829,
+                "Recall": 0.9282
+              },
+              "REM": {
+                "F1": 0.384,
+                "Precision": 0.3288,
+                "Recall": 0.4615
+              }
+            },
+            "n_train": 15740,
+            "n_test": 891,
+            "n_synthetic": 0,
+            "delta_MacroF1": 0.0,
+            "delta_N1_F1": 0.0
+          },
+          "rf_real": {
+            "Accuracy": 0.6105,
+            "MacroF1": 0.541,
+            "N1_F1": 0.1702,
+            "per_class_F1": {
+              "W": {
+                "F1": 0.6545,
+                "Precision": 0.5556,
+                "Recall": 0.7965
+              },
+              "N1": {
+                "F1": 0.1702,
+                "Precision": 0.1739,
+                "Recall": 0.1667
+              },
+              "N2": {
+                "F1": 0.6657,
+                "Precision": 0.8168,
+                "Recall": 0.5617
+              },
+              "N3": {
+                "F1": 0.7915,
+                "Precision": 0.6929,
+                "Recall": 0.9227
+              },
+              "REM": {
+                "F1": 0.4229,
+                "Precision": 0.3902,
+                "Recall": 0.4615
+              }
+            },
+            "n_train": 15740,
+            "n_test": 891,
+            "n_synthetic": 0
+          },
+          "rf_aug": {
+            "Accuracy": 0.6105,
+            "MacroF1": 0.541,
+            "N1_F1": 0.1702,
+            "per_class_F1": {
+              "W": {
+                "F1": 0.6545,
+                "Precision": 0.5556,
+                "Recall": 0.7965
+              },
+              "N1": {
+                "F1": 0.1702,
+                "Precision": 0.1739,
+                "Recall": 0.1667
+              },
+              "N2": {
+                "F1": 0.6657,
+                "Precision": 0.8168,
+                "Recall": 0.5617
+              },
+              "N3": {
+                "F1": 0.7915,
+                "Precision": 0.6929,
+                "Recall": 0.9227
+              },
+              "REM": {
+                "F1": 0.4229,
+                "Precision": 0.3902,
+                "Recall": 0.4615
+              }
+            },
+            "n_train": 15740,
+            "n_test": 891,
+            "n_synthetic": 0,
+            "delta_MacroF1": 0.0,
+            "delta_N1_F1": 0.0
+          }
+        },
+        "n_params_gen": 43141,
+        "n_params_disc": 737,
+        "history": {
+          "n_epochs_trained": 50,
+          "avg_time_per_epoch": 158.72,
+          "total_fold_time_s": 7935.9,
+          "final_gen_loss": -1.9591,
+          "final_disc_loss": 0.0595
+        }
+      },
+      {
+        "fold_idx": 7,
+        "test_subject": "EPCTL09.edf",
+        "collapsed": false,
+        "mae": {
+          "mean_MAE": 0.0465,
+          "std_MAE": 0.0448
+        },
+        "clf": {
+          "Accuracy": 0.5,
+          "Precision": 0.5,
+          "Sensitivity": 1.0,
+          "Specificity": 0.0,
+          "F1": 0.6667
+        },
+        "downstream": {
+          "svm_real": {
+            "Accuracy": 0.4407,
+            "MacroF1": 0.4286,
+            "N1_F1": 0.3421,
+            "per_class_F1": {
+              "W": {
+                "F1": 0.6368,
+                "Precision": 0.5267,
+                "Recall": 0.805
+              },
+              "N1": {
+                "F1": 0.3421,
+                "Precision": 0.2173,
+                "Recall": 0.8041
+              },
+              "N2": {
+                "F1": 0.3957,
+                "Precision": 0.5494,
+                "Recall": 0.3092
+              },
+              "N3": {
+                "F1": 0.2203,
+                "Precision": 0.8667,
+                "Recall": 0.1262
+              },
+              "REM": {
+                "F1": 0.5482,
+                "Precision": 0.9,
+                "Recall": 0.3942
+              }
+            },
+            "n_train": 15655,
+            "n_test": 910,
+            "n_synthetic": 0
+          },
+          "svm_aug": {
+            "Accuracy": 0.4407,
+            "MacroF1": 0.4286,
+            "N1_F1": 0.3421,
+            "per_class_F1": {
+              "W": {
+                "F1": 0.6368,
+                "Precision": 0.5267,
+                "Recall": 0.805
+              },
+              "N1": {
+                "F1": 0.3421,
+                "Precision": 0.2173,
+                "Recall": 0.8041
+              },
+              "N2": {
+                "F1": 0.3957,
+                "Precision": 0.5494,
+                "Recall": 0.3092
+              },
+              "N3": {
+                "F1": 0.2203,
+                "Precision": 0.8667,
+                "Recall": 0.1262
+              },
+              "REM": {
+                "F1": 0.5482,
+                "Precision": 0.9,
+                "Recall": 0.3942
+              }
+            },
+            "n_train": 15655,
+            "n_test": 910,
+            "n_synthetic": 0,
+            "delta_MacroF1": 0.0,
+            "delta_N1_F1": 0.0
+          },
+          "rf_real": {
+            "Accuracy": 0.5714,
+            "MacroF1": 0.4468,
+            "N1_F1": 0.3259,
+            "per_class_F1": {
+              "W": {
+                "F1": 0.6768,
+                "Precision": 0.5654,
+                "Recall": 0.8428
+              },
+              "N1": {
+                "F1": 0.3259,
+                "Precision": 0.2543,
+                "Recall": 0.4536
+              },
+              "N2": {
+                "F1": 0.7066,
+                "Precision": 0.6872,
+                "Recall": 0.7271
+              },
+              "N3": {
+                "F1": 0.2185,
+                "Precision": 0.8125,
+                "Recall": 0.1262
+              },
+              "REM": {
+                "F1": 0.306,
+                "Precision": 0.6087,
+                "Recall": 0.2044
+              }
+            },
+            "n_train": 15655,
+            "n_test": 910,
+            "n_synthetic": 0
+          },
+          "rf_aug": {
+            "Accuracy": 0.5714,
+            "MacroF1": 0.4468,
+            "N1_F1": 0.3259,
+            "per_class_F1": {
+              "W": {
+                "F1": 0.6768,
+                "Precision": 0.5654,
+                "Recall": 0.8428
+              },
+              "N1": {
+                "F1": 0.3259,
+                "Precision": 0.2543,
+                "Recall": 0.4536
+              },
+              "N2": {
+                "F1": 0.7066,
+                "Precision": 0.6872,
+                "Recall": 0.7271
+              },
+              "N3": {
+                "F1": 0.2185,
+                "Precision": 0.8125,
+                "Recall": 0.1262
+              },
+              "REM": {
+                "F1": 0.306,
+                "Precision": 0.6087,
+                "Recall": 0.2044
+              }
+            },
+            "n_train": 15655,
+            "n_test": 910,
+            "n_synthetic": 0,
+            "delta_MacroF1": 0.0,
+            "delta_N1_F1": 0.0
+          }
+        },
+        "n_params_gen": 43141,
+        "n_params_disc": 737,
+        "history": {
+          "n_epochs_trained": 50,
+          "avg_time_per_epoch": 158.68,
+          "total_fold_time_s": 7934.3,
+          "final_gen_loss": -0.6758,
+          "final_disc_loss": 0.0434
+        }
+      },
+      {
+        "fold_idx": 8,
+        "test_subject": "EPCTL10.edf",
+        "collapsed": false,
+        "mae": {
+          "mean_MAE": 0.0294,
+          "std_MAE": 0.0261
+        },
+        "clf": {
+          "Accuracy": 0.5,
+          "Precision": 0.5,
+          "Sensitivity": 1.0,
+          "Specificity": 0.0,
+          "F1": 0.6667
+        },
+        "downstream": {
+          "svm_real": {
+            "Accuracy": 0.7049,
+            "MacroF1": 0.6318,
+            "N1_F1": 0.2869,
+            "per_class_F1": {
+              "W": {
+                "F1": 0.8053,
+                "Precision": 0.9055,
+                "Recall": 0.7251
+              },
+              "N1": {
+                "F1": 0.2869,
+                "Precision": 0.25,
+                "Recall": 0.3366
+              },
+              "N2": {
+                "F1": 0.7364,
+                "Precision": 0.8502,
+                "Recall": 0.6494
+              },
+              "N3": {
+                "F1": 0.9392,
+                "Precision": 0.9847,
+                "Recall": 0.8977
+              },
+              "REM": {
+                "F1": 0.3913,
+                "Precision": 0.2553,
+                "Recall": 0.8372
+              }
+            },
+            "n_train": 16370,
+            "n_test": 881,
+            "n_synthetic": 0
+          },
+          "svm_aug": {
+            "Accuracy": 0.7049,
+            "MacroF1": 0.6318,
+            "N1_F1": 0.2869,
+            "per_class_F1": {
+              "W": {
+                "F1": 0.8053,
+                "Precision": 0.9055,
+                "Recall": 0.7251
+              },
+              "N1": {
+                "F1": 0.2869,
+                "Precision": 0.25,
+                "Recall": 0.3366
+              },
+              "N2": {
+                "F1": 0.7364,
+                "Precision": 0.8502,
+                "Recall": 0.6494
+              },
+              "N3": {
+                "F1": 0.9392,
+                "Precision": 0.9847,
+                "Recall": 0.8977
+              },
+              "REM": {
+                "F1": 0.3913,
+                "Precision": 0.2553,
+                "Recall": 0.8372
+              }
+            },
+            "n_train": 16370,
+            "n_test": 881,
+            "n_synthetic": 0,
+            "delta_MacroF1": 0.0,
+            "delta_N1_F1": 0.0
+          },
+          "rf_real": {
+            "Accuracy": 0.773,
+            "MacroF1": 0.6533,
+            "N1_F1": 0.2323,
+            "per_class_F1": {
+              "W": {
+                "F1": 0.863,
+                "Precision": 0.8866,
+                "Recall": 0.8406
+              },
+              "N1": {
+                "F1": 0.2323,
+                "Precision": 0.3333,
+                "Recall": 0.1782
+              },
+              "N2": {
+                "F1": 0.8199,
+                "Precision": 0.766,
+                "Recall": 0.8819
+              },
+              "N3": {
+                "F1": 0.9154,
+                "Precision": 0.984,
+                "Recall": 0.8558
+              },
+              "REM": {
+                "F1": 0.4361,
+                "Precision": 0.3222,
+                "Recall": 0.6744
+              }
+            },
+            "n_train": 16370,
+            "n_test": 881,
+            "n_synthetic": 0
+          },
+          "rf_aug": {
+            "Accuracy": 0.773,
+            "MacroF1": 0.6533,
+            "N1_F1": 0.2323,
+            "per_class_F1": {
+              "W": {
+                "F1": 0.863,
+                "Precision": 0.8866,
+                "Recall": 0.8406
+              },
+              "N1": {
+                "F1": 0.2323,
+                "Precision": 0.3333,
+                "Recall": 0.1782
+              },
+              "N2": {
+                "F1": 0.8199,
+                "Precision": 0.766,
+                "Recall": 0.8819
+              },
+              "N3": {
+                "F1": 0.9154,
+                "Precision": 0.984,
+                "Recall": 0.8558
+              },
+              "REM": {
+                "F1": 0.4361,
+                "Precision": 0.3222,
+                "Recall": 0.6744
+              }
+            },
+            "n_train": 16370,
+            "n_test": 881,
+            "n_synthetic": 0,
+            "delta_MacroF1": 0.0,
+            "delta_N1_F1": 0.0
+          }
+        },
+        "n_params_gen": 43141,
+        "n_params_disc": 737,
+        "history": {
+          "n_epochs_trained": 50,
+          "avg_time_per_epoch": 165.19,
+          "total_fold_time_s": 8259.6,
+          "final_gen_loss": -1.1954,
+          "final_disc_loss": 0.0354
+        }
+      },
+      {
+        "fold_idx": 9,
+        "test_subject": "EPCTL11.edf",
+        "collapsed": false,
+        "mae": {
+          "mean_MAE": 0.0416,
+          "std_MAE": 0.0568
+        },
+        "clf": {
+          "Accuracy": 0.5,
+          "Precision": 0.5,
+          "Sensitivity": 1.0,
+          "Specificity": 0.0,
+          "F1": 0.6667
+        },
+        "downstream": {
+          "svm_real": {
+            "Accuracy": 0.801,
+            "MacroF1": 0.701,
+            "N1_F1": 0.2857,
+            "per_class_F1": {
+              "W": {
+                "F1": 0.6996,
+                "Precision": 0.8864,
+                "Recall": 0.5778
+              },
+              "N1": {
+                "F1": 0.2857,
+                "Precision": 0.2623,
+                "Recall": 0.3137
+              },
+              "N2": {
+                "F1": 0.8864,
+                "Precision": 0.8471,
+                "Recall": 0.9295
+              },
+              "N3": {
+                "F1": 0.8817,
+                "Precision": 0.8837,
+                "Recall": 0.8796
+              },
+              "REM": {
+                "F1": 0.7516,
+                "Precision": 0.7108,
+                "Recall": 0.7973
+              }
+            },
+            "n_train": 16235,
+            "n_test": 774,
+            "n_synthetic": 0
+          },
+          "svm_aug": {
+            "Accuracy": 0.801,
+            "MacroF1": 0.701,
+            "N1_F1": 0.2857,
+            "per_class_F1": {
+              "W": {
+                "F1": 0.6996,
+                "Precision": 0.8864,
+                "Recall": 0.5778
+              },
+              "N1": {
+                "F1": 0.2857,
+                "Precision": 0.2623,
+                "Recall": 0.3137
+              },
+              "N2": {
+                "F1": 0.8864,
+                "Precision": 0.8471,
+                "Recall": 0.9295
+              },
+              "N3": {
+                "F1": 0.8817,
+                "Precision": 0.8837,
+                "Recall": 0.8796
+              },
+              "REM": {
+                "F1": 0.7516,
+                "Precision": 0.7108,
+                "Recall": 0.7973
+              }
+            },
+            "n_train": 16235,
+            "n_test": 774,
+            "n_synthetic": 0,
+            "delta_MacroF1": 0.0,
+            "delta_N1_F1": 0.0
+          },
+          "rf_real": {
+            "Accuracy": 0.7829,
+            "MacroF1": 0.6406,
+            "N1_F1": 0.2118,
+            "per_class_F1": {
+              "W": {
+                "F1": 0.8,
+                "Precision": 0.9143,
+                "Recall": 0.7111
+              },
+              "N1": {
+                "F1": 0.2118,
+                "Precision": 0.2647,
+                "Recall": 0.1765
+              },
+              "N2": {
+                "F1": 0.8356,
+                "Precision": 0.748,
+                "Recall": 0.9463
+              },
+              "N3": {
+                "F1": 0.8967,
+                "Precision": 0.9095,
+                "Recall": 0.8843
+              },
+              "REM": {
+                "F1": 0.459,
+                "Precision": 0.5833,
+                "Recall": 0.3784
+              }
+            },
+            "n_train": 16235,
+            "n_test": 774,
+            "n_synthetic": 0
+          },
+          "rf_aug": {
+            "Accuracy": 0.7829,
+            "MacroF1": 0.6406,
+            "N1_F1": 0.2118,
+            "per_class_F1": {
+              "W": {
+                "F1": 0.8,
+                "Precision": 0.9143,
+                "Recall": 0.7111
+              },
+              "N1": {
+                "F1": 0.2118,
+                "Precision": 0.2647,
+                "Recall": 0.1765
+              },
+              "N2": {
+                "F1": 0.8356,
+                "Precision": 0.748,
+                "Recall": 0.9463
+              },
+              "N3": {
+                "F1": 0.8967,
+                "Precision": 0.9095,
+                "Recall": 0.8843
+              },
+              "REM": {
+                "F1": 0.459,
+                "Precision": 0.5833,
+                "Recall": 0.3784
+              }
+            },
+            "n_train": 16235,
+            "n_test": 774,
+            "n_synthetic": 0,
+            "delta_MacroF1": 0.0,
+            "delta_N1_F1": 0.0
+          }
+        },
+        "n_params_gen": 43141,
+        "n_params_disc": 737,
+        "history": {
+          "n_epochs_trained": 50,
+          "avg_time_per_epoch": 164.46,
+          "total_fold_time_s": 8223.2,
+          "final_gen_loss": -2.0836,
+          "final_disc_loss": 0.064
+        }
+      }
+    ],
+    "aggregated": {
+      "mean_MAE": {
+        "mean": 0.0518,
+        "std": 0.0236,
+        "all": [
+          0.0838,
+          0.0722,
+          0.0854,
+          0.0416,
+          0.0249,
+          0.0194,
+          0.0735,
+          0.0465,
+          0.0294,
+          0.0416
+        ]
+      },
+      "std_MAE": {
+        "mean": 0.0488,
+        "std": 0.02,
+        "all": [
+          0.0494,
+          0.0315,
+          0.0495,
+          0.0602,
+          0.093,
+          0.0183,
+          0.0588,
+          0.0448,
+          0.0261,
+          0.0568
+        ]
+      },
+      "Accuracy": {
+        "mean": 0.5,
+        "std": 0.0,
+        "all": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ]
+      },
+      "Precision": {
+        "mean": 0.5,
+        "std": 0.0,
+        "all": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ]
+      },
+      "Sensitivity": {
+        "mean": 1.0,
+        "std": 0.0,
+        "all": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "Specificity": {
+        "mean": 0.0,
+        "std": 0.0,
+        "all": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ]
+      },
+      "F1": {
+        "mean": 0.6667,
+        "std": 0.0,
+        "all": [
+          0.6667,
+          0.6667,
+          0.6667,
+          0.6667,
+          0.6667,
+          0.6667,
+          0.6667,
+          0.6667,
+          0.6667,
+          0.6667
+        ]
+      },
+      "avg_time_per_epoch": {
+        "mean": 161.379,
+        "std": 4.1618,
+        "all": [
+          155.76,
+          154.9,
+          163.87,
+          168.36,
+          163.62,
+          160.23,
+          158.72,
+          158.68,
+          165.19,
+          164.46
+        ]
+      },
+      "downstream_svm_aug_MacroF1": {
+        "mean": 0.5746,
+        "std": 0.0813,
+        "all": [
+          0.6634,
+          0.6298,
+          0.5738,
+          0.5674,
+          0.5445,
+          0.5427,
+          0.4625,
+          0.4286,
+          0.6318,
+          0.701
+        ]
+      },
+      "downstream_svm_aug_N1_F1": {
+        "mean": 0.2326,
+        "std": 0.097,
+        "all": [
+          0.2407,
+          0.3304,
+          0.275,
+          0.2376,
+          0.1379,
+          0.0,
+          0.1895,
+          0.3421,
+          0.2869,
+          0.2857
+        ]
+      },
+      "downstream_svm_aug_delta_MacroF1": {
+        "mean": 0.0,
+        "std": 0.0,
+        "all": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ]
+      },
+      "downstream_svm_aug_delta_N1_F1": {
+        "mean": 0.0,
+        "std": 0.0,
+        "all": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ]
+      },
+      "downstream_rf_aug_MacroF1": {
+        "mean": 0.596,
+        "std": 0.0703,
+        "all": [
+          0.6033,
+          0.6428,
+          0.5329,
+          0.5934,
+          0.5978,
+          0.7083,
+          0.541,
+          0.4468,
+          0.6533,
+          0.6406
+        ]
+      },
+      "downstream_rf_aug_N1_F1": {
+        "mean": 0.2455,
+        "std": 0.081,
+        "all": [
+          0.1964,
+          0.2667,
+          0.0909,
+          0.3616,
+          0.2439,
+          0.355,
+          0.1702,
+          0.3259,
+          0.2323,
+          0.2118
+        ]
+      },
+      "downstream_rf_aug_delta_MacroF1": {
+        "mean": 0.0,
+        "std": 0.0,
+        "all": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ]
+      },
+      "downstream_rf_aug_delta_N1_F1": {
+        "mean": 0.0,
+        "std": 0.0,
+        "all": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ]
+      },
+      "downstream_svm_real_MacroF1": {
+        "mean": 0.5746,
+        "std": 0.0813,
+        "all": [
+          0.6634,
+          0.6298,
+          0.5738,
+          0.5674,
+          0.5445,
+          0.5427,
+          0.4625,
+          0.4286,
+          0.6318,
+          0.701
+        ]
+      },
+      "downstream_rf_real_MacroF1": {
+        "mean": 0.596,
+        "std": 0.0703,
+        "all": [
+          0.6033,
+          0.6428,
+          0.5329,
+          0.5934,
+          0.5978,
+          0.7083,
+          0.541,
+          0.4468,
+          0.6533,
+          0.6406
+        ]
+      },
+      "n_params_gen": 43141,
+      "n_params_disc": 737
+    }
+  }
+}

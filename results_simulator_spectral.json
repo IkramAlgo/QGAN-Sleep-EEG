@@ -1,0 +1,500 @@
+{
+  "spectral_5feat": {
+    "n_features": 5,
+    "feature_set": "spectral",
+    "condition": "simulator",
+    "generator_type": "quantum",
+    "folds": [
+      {
+        "fold_idx": 0,
+        "test_subject": "EPCTL01.edf",
+        "collapsed": false,
+        "mae": {
+          "mean_MAE": 0.9803,
+          "std_MAE": 0.3056
+        },
+        "clf": {
+          "Accuracy": 0.78,
+          "Precision": 0.6944,
+          "Sensitivity": 1.0,
+          "Specificity": 0.56,
+          "F1": 0.8197
+        },
+        "downstream": {
+          "svm_real": {
+            "Accuracy": 0.7941,
+            "MacroF1": 0.6646,
+            "N1_F1": 0.2243,
+            "per_class_F1": {
+              "W": {
+                "F1": 0.6027,
+                "Precision": 0.8148,
+                "Recall": 0.4783
+              },
+              "N1": {
+                "F1": 0.2243,
+                "Precision": 0.3636,
+                "Recall": 0.1622
+              },
+              "N2": {
+                "F1": 0.8559,
+                "Precision": 0.8671,
+                "Recall": 0.845
+              },
+              "N3": {
+                "F1": 0.7749,
+                "Precision": 0.6789,
+                "Recall": 0.9027
+              },
+              "REM": {
+                "F1": 0.865,
+                "Precision": 0.8396,
+                "Recall": 0.892
+              }
+            },
+            "n_train": 15370,
+            "n_test": 952,
+            "n_synthetic": 0
+          },
+          "svm_aug": {
+            "Accuracy": 0.7941,
+            "MacroF1": 0.6646,
+            "N1_F1": 0.2243,
+            "per_class_F1": {
+              "W": {
+                "F1": 0.6027,
+                "Precision": 0.8148,
+                "Recall": 0.4783
+              },
+              "N1": {
+                "F1": 0.2243,
+                "Precision": 0.3636,
+                "Recall": 0.1622
+              },
+              "N2": {
+                "F1": 0.8559,
+                "Precision": 0.8671,
+                "Recall": 0.845
+              },
+              "N3": {
+                "F1": 0.7749,
+                "Precision": 0.6789,
+                "Recall": 0.9027
+              },
+              "REM": {
+                "F1": 0.865,
+                "Precision": 0.8396,
+                "Recall": 0.892
+              }
+            },
+            "n_train": 15370,
+            "n_test": 952,
+            "n_synthetic": 0,
+            "delta_MacroF1": 0.0,
+            "delta_N1_F1": 0.0
+          },
+          "rf_real": {
+            "Accuracy": 0.7185,
+            "MacroF1": 0.5928,
+            "N1_F1": 0.1525,
+            "per_class_F1": {
+              "W": {
+                "F1": 0.6341,
+                "Precision": 0.7222,
+                "Recall": 0.5652
+              },
+              "N1": {
+                "F1": 0.1525,
+                "Precision": 0.2045,
+                "Recall": 0.1216
+              },
+              "N2": {
+                "F1": 0.8035,
+                "Precision": 0.7415,
+                "Recall": 0.8769
+              },
+              "N3": {
+                "F1": 0.7481,
+                "Precision": 0.6944,
+                "Recall": 0.8108
+              },
+              "REM": {
+                "F1": 0.6255,
+                "Precision": 0.8687,
+                "Recall": 0.4886
+              }
+            },
+            "n_train": 15370,
+            "n_test": 952,
+            "n_synthetic": 0
+          },
+          "rf_aug": {
+            "Accuracy": 0.7185,
+            "MacroF1": 0.5928,
+            "N1_F1": 0.1525,
+            "per_class_F1": {
+              "W": {
+                "F1": 0.6341,
+                "Precision": 0.7222,
+                "Recall": 0.5652
+              },
+              "N1": {
+                "F1": 0.1525,
+                "Precision": 0.2045,
+                "Recall": 0.1216
+              },
+              "N2": {
+                "F1": 0.8035,
+                "Precision": 0.7415,
+                "Recall": 0.8769
+              },
+              "N3": {
+                "F1": 0.7481,
+                "Precision": 0.6944,
+                "Recall": 0.8108
+              },
+              "REM": {
+                "F1": 0.6255,
+                "Precision": 0.8687,
+                "Recall": 0.4886
+              }
+            },
+            "n_train": 15370,
+            "n_test": 952,
+            "n_synthetic": 0,
+            "delta_MacroF1": 0.0,
+            "delta_N1_F1": 0.0
+          }
+        },
+        "n_params_gen": 14,
+        "n_params_disc": 801,
+        "history": {
+          "n_epochs_trained": 50,
+          "avg_time_per_epoch": 740.63,
+          "total_fold_time_s": 37031.3,
+          "final_gen_loss": -0.6798,
+          "final_disc_loss": -0.9456
+        }
+      },
+      {
+        "fold_idx": 1,
+        "test_subject": "EPCTL02.edf",
+        "collapsed": false,
+        "mae": {
+          "mean_MAE": 0.9307,
+          "std_MAE": 0.2666
+        },
+        "clf": {
+          "Accuracy": 0.71,
+          "Precision": 0.6329,
+          "Sensitivity": 1.0,
+          "Specificity": 0.42,
+          "F1": 0.7752
+        },
+        "downstream": {
+          "svm_real": {
+            "Accuracy": 0.7335,
+            "MacroF1": 0.6236,
+            "N1_F1": 0.3304,
+            "per_class_F1": {
+              "W": {
+                "F1": 0.6545,
+                "Precision": 0.5421,
+                "Recall": 0.8256
+              },
+              "N1": {
+                "F1": 0.3304,
+                "Precision": 0.6129,
+                "Recall": 0.2262
+              },
+              "N2": {
+                "F1": 0.8558,
+                "Precision": 0.9692,
+                "Recall": 0.7663
+              },
+              "N3": {
+                "F1": 0.7913,
+                "Precision": 0.7565,
+                "Recall": 0.8295
+              },
+              "REM": {
+                "F1": 0.4859,
+                "Precision": 0.4019,
+                "Recall": 0.6143
+              }
+            },
+            "n_train": 15265,
+            "n_test": 1017,
+            "n_synthetic": 0
+          },
+          "svm_aug": {
+            "Accuracy": 0.7335,
+            "MacroF1": 0.6236,
+            "N1_F1": 0.3304,
+            "per_class_F1": {
+              "W": {
+                "F1": 0.6545,
+                "Precision": 0.5421,
+                "Recall": 0.8256
+              },
+              "N1": {
+                "F1": 0.3304,
+                "Precision": 0.6129,
+                "Recall": 0.2262
+              },
+              "N2": {
+                "F1": 0.8558,
+                "Precision": 0.9692,
+                "Recall": 0.7663
+              },
+              "N3": {
+                "F1": 0.7913,
+                "Precision": 0.7565,
+                "Recall": 0.8295
+              },
+              "REM": {
+                "F1": 0.4859,
+                "Precision": 0.4019,
+                "Recall": 0.6143
+              }
+            },
+            "n_train": 15265,
+            "n_test": 1017,
+            "n_synthetic": 0,
+            "delta_MacroF1": 0.0,
+            "delta_N1_F1": 0.0
+          },
+          "rf_real": {
+            "Accuracy": 0.7788,
+            "MacroF1": 0.6477,
+            "N1_F1": 0.2628,
+            "per_class_F1": {
+              "W": {
+                "F1": 0.7613,
+                "Precision": 0.6556,
+                "Recall": 0.9077
+              },
+              "N1": {
+                "F1": 0.2628,
+                "Precision": 0.3396,
+                "Recall": 0.2143
+              },
+              "N2": {
+                "F1": 0.8759,
+                "Precision": 0.9157,
+                "Recall": 0.8394
+              },
+              "N3": {
+                "F1": 0.8604,
+                "Precision": 0.8629,
+                "Recall": 0.858
+              },
+              "REM": {
+                "F1": 0.4783,
+                "Precision": 0.4853,
+                "Recall": 0.4714
+              }
+            },
+            "n_train": 15265,
+            "n_test": 1017,
+            "n_synthetic": 0
+          },
+          "rf_aug": {
+            "Accuracy": 0.7788,
+            "MacroF1": 0.6477,
+            "N1_F1": 0.2628,
+            "per_class_F1": {
+              "W": {
+                "F1": 0.7613,
+                "Precision": 0.6556,
+                "Recall": 0.9077
+              },
+              "N1": {
+                "F1": 0.2628,
+                "Precision": 0.3396,
+                "Recall": 0.2143
+              },
+              "N2": {
+                "F1": 0.8759,
+                "Precision": 0.9157,
+                "Recall": 0.8394
+              },
+              "N3": {
+                "F1": 0.8604,
+                "Precision": 0.8629,
+                "Recall": 0.858
+              },
+              "REM": {
+                "F1": 0.4783,
+                "Precision": 0.4853,
+                "Recall": 0.4714
+              }
+            },
+            "n_train": 15265,
+            "n_test": 1017,
+            "n_synthetic": 0,
+            "delta_MacroF1": 0.0,
+            "delta_N1_F1": 0.0
+          }
+        },
+        "n_params_gen": 14,
+        "n_params_disc": 801,
+        "history": {
+          "n_epochs_trained": 50,
+          "avg_time_per_epoch": 736.31,
+          "total_fold_time_s": 36815.5,
+          "final_gen_loss": -0.3991,
+          "final_disc_loss": -1.0368
+        }
+      }
+    ],
+    "aggregated": {
+      "mean_MAE": {
+        "mean": 0.9555,
+        "std": 0.0248,
+        "all": [
+          0.9803,
+          0.9307
+        ]
+      },
+      "std_MAE": {
+        "mean": 0.2861,
+        "std": 0.0195,
+        "all": [
+          0.3056,
+          0.2666
+        ]
+      },
+      "Accuracy": {
+        "mean": 0.745,
+        "std": 0.035,
+        "all": [
+          0.78,
+          0.71
+        ]
+      },
+      "Precision": {
+        "mean": 0.6637,
+        "std": 0.0307,
+        "all": [
+          0.6944,
+          0.6329
+        ]
+      },
+      "Sensitivity": {
+        "mean": 1.0,
+        "std": 0.0,
+        "all": [
+          1.0,
+          1.0
+        ]
+      },
+      "Specificity": {
+        "mean": 0.49,
+        "std": 0.07,
+        "all": [
+          0.56,
+          0.42
+        ]
+      },
+      "F1": {
+        "mean": 0.7974,
+        "std": 0.0222,
+        "all": [
+          0.8197,
+          0.7752
+        ]
+      },
+      "avg_time_per_epoch": {
+        "mean": 738.47,
+        "std": 2.16,
+        "all": [
+          740.63,
+          736.31
+        ]
+      },
+      "downstream_svm_aug_MacroF1": {
+        "mean": 0.6441,
+        "std": 0.0205,
+        "all": [
+          0.6646,
+          0.6236
+        ]
+      },
+      "downstream_svm_aug_N1_F1": {
+        "mean": 0.2773,
+        "std": 0.0531,
+        "all": [
+          0.2243,
+          0.3304
+        ]
+      },
+      "downstream_svm_aug_delta_MacroF1": {
+        "mean": 0.0,
+        "std": 0.0,
+        "all": [
+          0.0,
+          0.0
+        ]
+      },
+      "downstream_svm_aug_delta_N1_F1": {
+        "mean": 0.0,
+        "std": 0.0,
+        "all": [
+          0.0,
+          0.0
+        ]
+      },
+      "downstream_rf_aug_MacroF1": {
+        "mean": 0.6202,
+        "std": 0.0275,
+        "all": [
+          0.5928,
+          0.6477
+        ]
+      },
+      "downstream_rf_aug_N1_F1": {
+        "mean": 0.2077,
+        "std": 0.0551,
+        "all": [
+          0.1525,
+          0.2628
+        ]
+      },
+      "downstream_rf_aug_delta_MacroF1": {
+        "mean": 0.0,
+        "std": 0.0,
+        "all": [
+          0.0,
+          0.0
+        ]
+      },
+      "downstream_rf_aug_delta_N1_F1": {
+        "mean": 0.0,
+        "std": 0.0,
+        "all": [
+          0.0,
+          0.0
+        ]
+      },
+      "downstream_svm_real_MacroF1": {
+        "mean": 0.6441,
+        "std": 0.0205,
+        "all": [
+          0.6646,
+          0.6236
+        ]
+      },
+      "downstream_rf_real_MacroF1": {
+        "mean": 0.6202,
+        "std": 0.0275,
+        "all": [
+          0.5928,
+          0.6477
+        ]
+      },
+      "n_params_gen": 14,
+      "n_params_disc": 801
+    }
+  }
+}
