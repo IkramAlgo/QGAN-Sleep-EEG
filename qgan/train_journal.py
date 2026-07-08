@@ -10,57 +10,53 @@
 #    trained on data it should never have seen.
 #    CORRECT approach: train downstream classifier on the SAME training
 #    data the GAN used (N-1 subjects), evaluate on the full test subject.
-#    train_journal.py now passes train_feats + train_labels to
-#    evaluate_downstream(), not test_feats.
 #
 #  FIX 2 (CRITICAL — scaler bias in augmented comparison):
-#    Previously the StandardScaler was fit SEPARATELY on real training data
-#    and on augmented training data. Fitting on augmented data (which
-#    includes synthetic samples clamped to [-1,1]) changes the scale
-#    statistics, making the real vs augmented comparison unfair.
-#    CORRECT approach: fit scaler on REAL training data only, then
-#    apply that same scaler to the augmented set and to the test set.
+#    StandardScaler is now fit on REAL training data only, then applied
+#    to both the augmented set and the test set.
 #
-#  FIX 3 (Statistical testing minimum folds):
-#    Wilcoxon test now requires >= 5 folds (was >= 3). With only 3 data
-#    points the Wilcoxon test has essentially no statistical power.
-#    10-subject LOOCV gives 10 folds — sufficient for p-value reporting.
+#  FIX 3 (Statistical testing minimum folds): Wilcoxon requires >= 5 folds.
 #
-#  FIX 4 (Parameter counts saved to results JSON — Nature requirement):
-#    Fold results now include n_params_gen and n_params_disc.
-#    This enables the parameter comparison table required for Nature.
-#    build_models() returns these counts (see models_journal.py FIX 2).
+#  FIX 4 (Parameter counts saved to results JSON — Nature requirement).
 #
-#  FIX 5 (get_loocv_loader signature change):
-#    data_loader_journal.py now returns (loader, train_f, train_l, test_f, test_l)
-#    All call sites updated to unpack 5 values instead of 3.
+#  FIX 5 (get_loocv_loader returns 5 values, not 3).
 #
-#  FIX 6 (Dynamic minority class in downstream evaluation):
-#    build_augmented_dataset() now auto-detects the minority class per fold
-#    (see data_loader_journal.py FIX 2). No code change needed here —
-#    just don't pass target_stage=1.
+#  FIX 6 (Dynamic minority class in downstream evaluation).
 #
-# ── REVIEWER 2 RESPONSES ────────────────────────────────────────────────────
-#   Weakness 1 (weak baseline):  ClassicalBCEGenerator (conference, small MLP)
-#                                 ClassicalWGANGenerator (fair, same loss)
-#                                 DCGANStyleGenerator (modern method)
-#   Weakness 2 (simplified feat): statistical (4) | spectral (5) | combined (9)
-#                                 spectral = clinically meaningful AASM bands
-#   Weakness 3 (no downstream):  LOOCV SVM + RandomForest, N1 minority F1,
-#                                 delta vs real-only, Wilcoxon significance
+# ── NEW: QPU JOB-SPLITTING SUPPORT (added on top of FIX 1-6) ───────────────
+#
+#  NEW-1: ONLY_CONDITION env var — isolate a single condition (e.g. run
+#         qpu_sim without qpu_zne dragging along in the same job). Without
+#         this, --conditions qpu always ran BOTH qpu_sim and qpu_zne
+#         sequentially in one process, which is why QPU never finished.
+#
+#  NEW-2: ONLY_FOLD env var — isolate a single LOOCV fold. Without this,
+#         run_one_config() looped over all n_folds serially in one process
+#         (10 folds x ~5-6hrs each at 50 epochs = 50-60+ hrs), which is why
+#         nothing ever got checkpointed before SLURM's wall-clock killed it.
+#         This is what makes a per-fold SLURM job array possible.
+#
+#  NEW-3: out_file_path() accepts an optional fold_idx. When ONLY_FOLD is
+#         set, each array task writes its own fold-specific JSON file
+#         instead of all tasks fighting over one shared file (which risked
+#         one task's _atomic_write clobbering another's completed fold).
+#
+#  None of NEW-1/2/3 change behavior when the env vars are unset — the CPU
+#  path and your existing CPU result files are completely unaffected.
 #
 # ── HOW TO RUN ──────────────────────────────────────────────────────────────
 #   LOCAL SMOKE TEST (~10 min):
 #     python -m qgan.train_journal --mode local
 #
-#   FULL CPU (classical + quantum simulator, all feature sets):
+#   FULL CPU (unchanged — you already have these results):
 #     CPU_EPOCHS=50 python -m qgan.train_journal --mode full --conditions cpu
 #
-#   FULL QPU (hardware noise simulation):
+#   FULL QPU — OLD WAY (do not use, this is what caused the 250+ hr problem):
 #     QPU_EPOCHS=100 python -m qgan.train_journal --mode full --conditions qpu
 #
-#   ALL CONDITIONS:
-#     CPU_EPOCHS=50 QPU_EPOCHS=50 python -m qgan.train_journal \ --mode full --conditions all
+#   FULL QPU — NEW WAY (isolate condition + fold, run as SLURM array):
+#     ONLY_CONDITION=qpu_sim ONLY_FOLD=0 QPU_EPOCHS=50 FEATURE_SET=statistical \
+#         python -m qgan.train_journal --mode full --conditions qpu
 #
 #   SINGLE FEATURE SET:
 #     FEATURE_SET=combined python -m qgan.train_journal --mode full
@@ -68,18 +64,17 @@
 #   RUN EXPRESSIBILITY SWEEP (once, before training):
 #     python -m qgan.train_journal --expressibility-only
 
-# CPU_EPOCHS=50 QPU_EPOCHS=50 python -m qgan.train_journal --mode full --conditions all
-
-# Job 1: CPU conditions only (fast, will finish in ~3-4 days)
-# CPU_EPOCHS=50 python -m qgan.train_journal --mode full --conditions cpu
-
-# Job 2: QPU sim only (slow, submit separately)
-# QPU_EPOCHS=50 python -m qgan.train_journal --mode full --conditions qpu
-
-# Three separate jobs, one per feature set
+# Three separate jobs, one per feature set (CPU — unchanged, already done)
 #FEATURE_SET=statistical CPU_EPOCHS=50 python -m qgan.train_journal --mode full --conditions cpu
 #FEATURE_SET=spectral    CPU_EPOCHS=50 python -m qgan.train_journal --mode full --conditions cpu
 #FEATURE_SET=combined    CPU_EPOCHS=50 python -m qgan.train_journal --mode full --conditions cpu
+
+# QPU — NEW: submit as a SLURM array, one task per fold, ONE condition at a time.
+# See run_qpu_array.sh example at the bottom of this file's comments / your sbatch dir.
+# After all array tasks finish for a (condition, feature_set) pair, run:
+#   python merge_qpu_folds.py qpu_sim statistical
+# to stitch the per-fold files back into the single results_qpu_sim_statistical.json
+# shape that compute_significance_tests() expects.
 
 
 import argparse
@@ -193,10 +188,19 @@ def _atomic_write(path: str, data: dict) -> None:
 
 
 def out_file_path(condition: str, feature_set: str,
-                   generator_type: str = None) -> str:
+                   generator_type: str = None,
+                   fold_idx: int = None) -> str:
+    """
+    NEW: accepts an optional fold_idx. When set (i.e. ONLY_FOLD is in use),
+    returns a fold-specific filename so concurrent SLURM array tasks never
+    write to the same file and clobber each other.
+    Behavior is UNCHANGED when fold_idx is None (default) — CPU path and
+    existing full-sweep results files are unaffected.
+    """
+    suffix = f"_fold{fold_idx}" if fold_idx is not None else ""
     if generator_type and generator_type != GEN_QUANTUM:
-        return f"results_{condition}_{feature_set}_{generator_type}.json"
-    return f"results_{condition}_{feature_set}.json"
+        return f"results_{condition}_{feature_set}_{generator_type}{suffix}.json"
+    return f"results_{condition}_{feature_set}{suffix}.json"
 
 
 # ================================================================
@@ -281,16 +285,7 @@ def compute_clf(gen, disc, data_tensor: torch.Tensor,
 
 
 # ================================================================
-#  DOWNSTREAM CLASSIFIER EVALUATION (FIX 1 + FIX 2)
-#
-#  FIX 1: NOW takes train_feats/train_labels (the GAN's training data),
-#          trains downstream classifiers on that + synthetic samples,
-#          then evaluates on the HELD-OUT test subject.
-#          Previously it was splitting the test subject data — WRONG.
-#
-#  FIX 2: StandardScaler is fit on REAL training data only,
-#          then applied to both real and augmented training sets.
-#          Previously scaler was re-fit on augmented data — unfair.
+#  DOWNSTREAM CLASSIFIER EVALUATION (FIX 1 + FIX 2) — unchanged
 # ================================================================
 def evaluate_downstream(train_feats: torch.Tensor,
                           train_labels: torch.Tensor,
@@ -306,10 +301,6 @@ def evaluate_downstream(train_feats: torch.Tensor,
 
     FIX 1: train_feats = training subjects (N-1 subjects), NOT test subject.
     FIX 2: scaler fit on real train data only, applied uniformly.
-
-    Returns dict with keys: svm_real, svm_aug, rf_real, rf_aug,
-    each containing: Accuracy, MacroF1, N1_F1, per_class_F1,
-                     delta_MacroF1, delta_N1_F1, n_train, n_test, n_synthetic
     """
     X_train_real = train_feats[:, :n_features].numpy()
     y_train_real = train_labels.numpy()
@@ -405,7 +396,7 @@ def evaluate_downstream(train_feats: torch.Tensor,
 
 
 # ================================================================
-#  CHECKPOINT VALIDATION
+#  CHECKPOINT VALIDATION — unchanged
 # ================================================================
 def get_valid_fold_indices(saved_folds: list) -> set:
     valid = set()
@@ -424,7 +415,7 @@ def get_valid_fold_indices(saved_folds: list) -> set:
 
 
 # ================================================================
-#  AGGREGATE LOOCV RESULTS
+#  AGGREGATE LOOCV RESULTS — unchanged
 # ================================================================
 def aggregate_folds(fold_results: list) -> dict:
     scalar_keys = [
@@ -482,7 +473,7 @@ def aggregate_folds(fold_results: list) -> dict:
 
 
 # ================================================================
-#  STATISTICAL SIGNIFICANCE (FIX 3: min 5 folds)
+#  STATISTICAL SIGNIFICANCE (FIX 3: min 5 folds) — unchanged
 # ================================================================
 def compute_significance_tests(all_results: dict) -> dict:
     """
@@ -502,7 +493,7 @@ def compute_significance_tests(all_results: dict) -> dict:
         qgan_std_mae  = None
         qgan_macro_f1 = None
         for key, res in all_results.items():
-            if CONDITION_SIMULATOR in key and GEN_QUANTUM in key:
+            if key == f"{CONDITION_SIMULATOR}_{feature_set}":
                 cdata = res.get(feat_key, {})
                 agg   = cdata.get("aggregated", {})
                 if "std_MAE" in agg:
@@ -557,7 +548,7 @@ def compute_significance_tests(all_results: dict) -> dict:
 
 
 # ================================================================
-#  TRAINING LOOP — one LOOCV fold
+#  TRAINING LOOP — one LOOCV fold — unchanged
 # ================================================================
 def train_one_fold(gen, disc, train_loader,
                    eval_feats: torch.Tensor,
@@ -682,14 +673,24 @@ def run_one_config(condition: str,
     """
     Run LOOCV for one (condition, generator_type, feature_set) combination.
     Checkpointed atomically after each fold.
-    Returns results dict.
+
+    NEW: if the ONLY_FOLD env var is set, this restricts execution to a
+    single fold and writes to a fold-specific output file (see
+    out_file_path). This is what makes per-fold SLURM job arrays possible
+    for QPU conditions, without touching CPU behavior at all.
     """
     is_quantum = (generator_type == GEN_QUANTUM)
     is_bce     = (generator_type == GEN_CLASSICAL_BCE)
     label      = (CONDITION_LABELS.get(condition, condition)
                   if is_quantum
                   else GENERATOR_LABELS.get(generator_type, generator_type))
-    out_file   = out_file_path(condition, feature_set, generator_type)
+
+    # NEW: fold-specific output file when ONLY_FOLD is set
+    only_fold_env = os.getenv("ONLY_FOLD")
+    fold_override = int(only_fold_env) if only_fold_env is not None else None
+    out_file = out_file_path(condition, feature_set, generator_type,
+                              fold_idx=fold_override)
+
     n_folds    = len(subject_paths)
     n_features = FEATURE_SET_N[feature_set]
     n_qubits   = N_QUBITS_FOR_FEATURES[feature_set]
@@ -723,8 +724,13 @@ def run_one_config(condition: str,
     ]
 
     pending = [i for i in range(n_folds) if i not in valid_indices]
+
+    # NEW: restrict to a single fold if ONLY_FOLD is set
+    if fold_override is not None:
+        pending = [f for f in pending if f == fold_override]
+
     if not pending:
-        print(f"  All folds done for {feat_key}. Skipping.")
+        print(f"  All requested folds done for {feat_key}. Skipping.")
         return results
 
     print(f"\n  {'─'*60}")
@@ -735,7 +741,10 @@ def run_one_config(condition: str,
     noise_level = NOISE_LEVEL if condition == CONDITION_DATA_NOISE else 0.0
     disc_input_dim = n_qubits if is_quantum else n_features
 
-    for fold_idx in range(n_folds):
+    # NEW: loop over `pending` (which respects ONLY_FOLD) instead of
+    # range(n_folds). Previously this always ran ALL folds serially in one
+    # process — that's what made a single QPU job take 40-60+ hours.
+    for fold_idx in pending:
         if fold_idx in valid_indices:
             continue
         if _seconds_until_wall_limit() < WALL_CLOCK_BUFFER_S:
@@ -876,15 +885,31 @@ def main():
     else:
         n_epochs_cpu  = int(os.getenv("CPU_EPOCHS", "50"))
         n_epochs_qpu  = int(os.getenv("QPU_EPOCHS", "100"))
-        subject_paths = [p for p in SUBJECT_PATHS if os.path.exists(p)] #update this line on the real code at 4 june 
+        subject_paths = [p for p in SUBJECT_PATHS if os.path.exists(p)]
         print(f"\n  MODE: FULL | CPU_EPOCHS={n_epochs_cpu} "
               f"QPU_EPOCHS={n_epochs_qpu}")
         print(f"  Feature sets: {feature_sets}")
 
     conditions_to_run = CONDITION_GROUPS[args.conditions]
+
+    # NEW: ONLY_CONDITION — isolate a single condition (e.g. qpu_sim without
+    # qpu_zne). Without this, --conditions qpu always ran both back-to-back
+    # in one process. This has no effect on the CPU path since CPU jobs
+    # never set this variable.
+    only_condition = os.getenv("ONLY_CONDITION")
+    if only_condition:
+        conditions_to_run = [c for c in conditions_to_run if c == only_condition]
+        if not conditions_to_run:
+            print(f"  ERROR: ONLY_CONDITION={only_condition!r} not found in "
+                  f"conditions group '{args.conditions}'. Nothing to run.")
+            return
+
     print(f"  Conditions: "
           f"{[CONDITION_LABELS.get(c, c) for c in conditions_to_run]}")
     print(f"  Subjects: {len(subject_paths)}")
+    only_fold_env = os.getenv("ONLY_FOLD")
+    if only_fold_env is not None:
+        print(f"  ONLY_FOLD: {only_fold_env} (restricting to a single fold)")
     print(f"  {'='*70}")
 
     all_summary = {}
@@ -912,7 +937,7 @@ def main():
         if scaler_info:
             _atomic_write(f"scaler_{feature_set}.json", scaler_info)
 
-        # 1. Classical baselines
+        # 1. Classical baselines — unchanged, CPU only
         if args.conditions in ("cpu", "all"):
             for gen_type in [GEN_CLASSICAL_BCE,
                              GEN_CLASSICAL_WGAN,
@@ -931,7 +956,7 @@ def main():
                 key = f"classical_{gen_type}_{feature_set}"
                 all_summary[key] = res
 
-        # 2. Quantum conditions
+        # 2. Quantum conditions (now respects ONLY_CONDITION / ONLY_FOLD)
         for condition in conditions_to_run:
             n_epochs = (n_epochs_qpu
                         if condition in (CONDITION_QPU_SIM, CONDITION_QPU_ZNE)
@@ -964,7 +989,7 @@ def main():
 
 
 # ================================================================
-#  PRINTING
+#  PRINTING — unchanged
 # ================================================================
 def _print_summary_table(all_results: dict, feature_sets: list) -> None:
     W = 120

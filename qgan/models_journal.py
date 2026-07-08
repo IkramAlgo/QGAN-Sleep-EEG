@@ -59,7 +59,7 @@ from qgan.config import N_LAYERS, WEIGHT_INIT_STD
 NUM_THREADS = int(os.getenv("OMP_NUM_THREADS", "38"))
 torch.set_num_threads(NUM_THREADS)
 
-QPU_SHOTS         = 128
+QPU_SHOTS = int(os.getenv("QPU_SHOTS", "128"))
 SPSA_H            = 0.05
 ZNE_SCALE_FACTORS = [1, 3, 5]
 
