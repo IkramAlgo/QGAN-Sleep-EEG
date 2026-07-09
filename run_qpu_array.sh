@@ -1,11 +1,10 @@
 #!/bin/bash
 #SBATCH --job-name=qgan_qpu
-#SBATCH --array=0-9
+#SBATCH --array=0-2
 #SBATCH --time=08:00:00
 #SBATCH --output=logs/qpu_%A_%a.log
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=8
-#SBATCH --mem=8G
 
 cd /work/ats852/2026/QGAN-Sleep-EEG
 
