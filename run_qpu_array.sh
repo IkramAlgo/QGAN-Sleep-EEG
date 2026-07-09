@@ -6,7 +6,10 @@
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=8
 
-cd /work/ats852/2026/QGAN-Sleep-EEG
+cd ~/QGAN-Sleep-EEG
+
+# Activate your python environment
+source activate qgan310
 
 export SLURM_JOB_END_TIME=$(($(date +%s) + 8*3600))
 export OMP_NUM_THREADS=8
