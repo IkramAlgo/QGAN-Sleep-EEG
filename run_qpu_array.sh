@@ -3,6 +3,7 @@
 #SBATCH --array=0-9
 #SBATCH --time=08:00:00
 #SBATCH --output=logs/qpu_%A_%a.log
+#SBATCH --ntasks=1
 #SBATCH --cpus-per-task=8
 #SBATCH --mem=16G
 
