@@ -5,9 +5,9 @@
 #SBATCH --output=logs/qpu_%A_%a.log
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=8
-#SBATCH --mem=16G
+#SBATCH --mem=8G
 
-cd ~/QGAN-Sleep-EEG
+cd /work/ats852/2026/QGAN-Sleep-EEG
 
 export SLURM_JOB_END_TIME=$(($(date +%s) + 8*3600))
 export OMP_NUM_THREADS=8
