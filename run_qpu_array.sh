@@ -19,4 +19,4 @@ export QPU_EPOCHS=${QPU_EPOCHS:-50}
 export QPU_SHOTS=${QPU_SHOTS:-128}
 export FEATURE_SET=${FEATURE_SET:-statistical}
 
-python -m qgan.train_journal --mode full --conditions qpu
+~/.conda/envs/qgan310/bin/python -m qgan.train_journal --mode full --conditions qpu
