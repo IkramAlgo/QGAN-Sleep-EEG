@@ -11,6 +11,7 @@ cd ~/QGAN-Sleep-EEG
 # Activate your python environment
 source activate qgan310
 
+export PYTHONUNBUFFERED=1
 export SLURM_JOB_END_TIME=$(($(date +%s) + 8*3600))
 export OMP_NUM_THREADS=8
 export ONLY_FOLD=$SLURM_ARRAY_TASK_ID
@@ -19,4 +20,4 @@ export QPU_EPOCHS=${QPU_EPOCHS:-50}
 export QPU_SHOTS=${QPU_SHOTS:-128}
 export FEATURE_SET=${FEATURE_SET:-statistical}
 
-~/.conda/envs/qgan310/bin/python -m qgan.train_journal --mode full --conditions qpu
+~/.conda/envs/qgan310/bin/python -u -m qgan.train_journal --mode full --conditions qpu
