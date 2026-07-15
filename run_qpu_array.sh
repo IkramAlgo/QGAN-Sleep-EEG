@@ -7,8 +7,14 @@
 #SBATCH --cpus-per-task=8
 #SBATCH --comment=mem_4G
 
-cd ~/2026/QGAN-Sleep-EEG
+# 1. CD into the absolute work directory path
+cd /work/ats852/2026/QGAN-Sleep-EEG
 
+# 2. Source conda and activate your specific environment
+source ~/miniconda3/etc/profile.d/conda.sh || source ~/.bashrc
+conda activate qgan310
+
+# 3. Environment variables
 export SLURM_JOB_END_TIME=$(($(date +%s) + 8*3600))
 export PYTHONUNBUFFERED=1
 export OMP_NUM_THREADS=8
@@ -18,4 +24,5 @@ export QPU_EPOCHS=${QPU_EPOCHS:-50}
 export QPU_SHOTS=${QPU_SHOTS:-128}
 export FEATURE_SET=${FEATURE_SET:-statistical}
 
+# 4. Run python with the activated environment
 python -u -m qgan.train_journal --mode full --conditions qpu
