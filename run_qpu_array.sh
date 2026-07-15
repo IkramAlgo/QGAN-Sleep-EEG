@@ -5,7 +5,7 @@
 #SBATCH --output=logs/qpu_%A_%a.log
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=8
-#SBATCH --mem=16G
+#SBATCH --comment=mem_4G
 
 cd ~/2026/QGAN-Sleep-EEG
 
