@@ -1,6 +1,7 @@
 @"
 qgan310/
-data/
+da
+
 __pycache__/
 *.pyc
 *.edf
@@ -10,5 +11,3 @@ build/
 sthefanie.txt
 .env
 "@ | Out-File -FilePath .gitignore -Encoding utf8
-
-Add-Content .gitignore "epoch_ckpt_*.pt"

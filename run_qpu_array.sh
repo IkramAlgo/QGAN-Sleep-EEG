@@ -7,7 +7,7 @@
 #SBATCH --cpus-per-task=8
 #SBATCH --mem=16G
 
-cd ~/QGAN-Sleep-EEG
+cd ~/2026/QGAN-Sleep-EEG
 
 export SLURM_JOB_END_TIME=$(($(date +%s) + 8*3600))
 export PYTHONUNBUFFERED=1
