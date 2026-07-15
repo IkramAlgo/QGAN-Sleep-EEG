@@ -10,3 +10,5 @@ build/
 sthefanie.txt
 .env
 "@ | Out-File -FilePath .gitignore -Encoding utf8
+
+Add-Content .gitignore "epoch_ckpt_*.pt"

@@ -2,54 +2,20 @@
 # Journal Extension — Multi-Baseline Quantum Generator Study
 #
 # ── WHAT CHANGED vs PREVIOUS VERSION (and WHY) ─────────────────────────────
+#  [... FIX 1-5 unchanged, see original header ...]
 #
-#  FIX 1 (Reviewer 2, Weakness 1 — weak classical baseline):
-#    ClassicalBCEGenerator is NOW its own small MLP matching the ACTUAL
-#    conference paper architecture (z→16→n_features, BatchNorm, ReLU).
-#    Previously it was identical to ClassicalWGANGenerator — meaning the
-#    "conference baseline" and the "new fair baseline" were the same model,
-#    which made no sense. Now:
-#      - ClassicalBCEGenerator   = conference architecture (small, BCE loss)
-#      - ClassicalWGANGenerator  = deeper fair baseline (same loss as QGAN)
-#      - DCGANStyleGenerator     = modern convolutional baseline
-#    This gives three structurally distinct classical generators.
-#
-#  FIX 2 (Reviewer 2, Weakness 1 — parameter count not saved):
-#    build_models() now RETURNS n_params_gen and n_params_disc so
-#    train_journal.py can save them to the results JSON.
-#    Nature reviewers require a parameter comparison table.
-#
-#  FIX 3 (DCGANStyleGenerator dimension bug):
-#    conv_out_size is now computed DYNAMICALLY via a dry-run forward pass
-#    through the conv stack instead of being hardcoded as base_channels*7.
-#    Previously the hardcoded value would silently break if base_channels
-#    was changed.
-#
-#  FIX 4 (ZNE import fragility):
-#    _build_zne_circuit() now catches ALL import failures and logs a clear
-#    error with PennyLane version info, then falls back gracefully to the
-#    base circuit rather than crashing the entire run.
-#
-#  FIX 5 (Expressibility metric — Nature requirement):
-#    compute_expressibility() added. Implements the Sim et al. (2019)
-#    expressibility measure: KL divergence between the Haar-random fidelity
-#    distribution and the circuit's sampled fidelity distribution.
-#    Higher expressibility = quantum circuit covers more of Hilbert space.
-#    Run ONCE per architecture; results saved to expressibility.json.
-#
-# ── CONDITION OVERVIEW ──────────────────────────────────────────────────────
-#   Condition 1: default.qubit, noiseless, backprop
-#   Condition 2: default.qubit + Gaussian input noise, backprop
-#   Condition 3: FakeNairobi AerSimulator, SPSA
-#   Condition 4: FakeNairobi AerSimulator + ZNE, SPSA
-#
-# ── ARCHITECTURE ────────────────────────────────────────────────────────────
-#   Arch C: n_features + 2 ancilla qubits, ring CNOT, RX encoding, RY trainable
-#   statistical (4 feat)  →  6 qubits  (4+2 ancilla)
-#   spectral   (5 feat)  →  7 qubits  (5+2 ancilla)
-#   combined   (9 feat)  → 11 qubits  (9+2 ancilla)
+# ── NEW (this update) ───────────────────────────────────────────────────────
+#  NEW-A: All prints use flush=True. SLURM redirects stdout to a log file,
+#         which switches Python to full buffering — previously nothing
+#         appeared in the log until the process exited or the buffer filled,
+#         making jobs look "stuck" even when running fine.
+#  NEW-B: _get_device() now prints debug markers before/after the
+#         FakeNairobi/NoiseModel construction and sets a hard socket
+#         timeout, so a network-dependent hang fails fast with a clear
+#         error instead of hanging silently for hours.
 
 import os
+import socket
 import warnings
 import torch
 import torch.nn as nn
@@ -62,6 +28,12 @@ torch.set_num_threads(NUM_THREADS)
 QPU_SHOTS = int(os.getenv("QPU_SHOTS", "128"))
 SPSA_H            = 0.05
 ZNE_SCALE_FACTORS = [1, 3, 5]
+
+# NEW-B: hard timeout (seconds) for any network-dependent call during
+# device setup. If FakeNairobi/NoiseModel construction tries to reach out
+# to the network and there's none available (common on HPC compute nodes),
+# this makes it fail in ~20s with a clear error instead of hanging forever.
+DEVICE_SETUP_TIMEOUT_S = int(os.getenv("DEVICE_SETUP_TIMEOUT_S", "20"))
 
 # ── Condition keys ─────────────────────────────────────────────────────────
 CONDITION_SIMULATOR    = "simulator"
@@ -121,6 +93,10 @@ def _get_device(condition: str, n_qubits: int = 6):
     Return (pennylane_device, diff_method) for the given condition.
     Cached after first construction.
     Falls back gracefully to default.qubit if Qiskit/FakeNairobi unavailable.
+
+    NEW-B: prints debug markers + enforces a hard socket timeout around
+    the FakeNairobi/NoiseModel construction, since this step can hang
+    indefinitely on compute nodes without internet access.
     """
     cache_key = (condition, n_qubits)
     if cache_key in _device_cache:
@@ -151,7 +127,18 @@ def _get_device(condition: str, n_qubits: int = 6):
             if FakeNairobi is None:
                 raise ImportError("FakeNairobi not found in any Qiskit package.")
 
-            noise_model = NoiseModel.from_backend(FakeNairobi())
+            # NEW-B: debug marker + hard timeout, so a network-dependent
+            # hang fails fast instead of running silently for hours.
+            print(f"    [DEBUG] Building noise model from FakeNairobi "
+                  f"(timeout={DEVICE_SETUP_TIMEOUT_S}s)...", flush=True)
+            _old_timeout = socket.getdefaulttimeout()
+            socket.setdefaulttimeout(DEVICE_SETUP_TIMEOUT_S)
+            try:
+                noise_model = NoiseModel.from_backend(FakeNairobi())
+            finally:
+                socket.setdefaulttimeout(_old_timeout)
+            print(f"    [DEBUG] Noise model built successfully.", flush=True)
+
             aer_backend = AerSimulator(
                 noise_model=noise_model,
                 max_parallel_threads=NUM_THREADS,
@@ -161,6 +148,18 @@ def _get_device(condition: str, n_qubits: int = 6):
             dev    = qml.device("qiskit.aer", wires=n_qubits,
                                 backend=aer_backend, shots=QPU_SHOTS)
             result = (dev, "spsa")
+
+        except socket.timeout:
+            warnings.warn(
+                f"[models_journal] FakeNairobi/NoiseModel construction "
+                f"TIMED OUT after {DEVICE_SETUP_TIMEOUT_S}s — likely no "
+                f"internet access on this compute node. "
+                f"Falling back to default.qubit (noiseless). "
+                f"QPU conditions will NOT reflect hardware noise.",
+                stacklevel=2,
+            )
+            dev    = qml.device("default.qubit", wires=n_qubits)
+            result = (dev, "backprop")
 
         except Exception as exc:
             warnings.warn(
@@ -295,23 +294,11 @@ class GeneratorJournal(nn.Module):
 
 # ================================================================
 #  CLASSICAL BASELINE 1: ClassicalBCEGenerator — FIX 1
-#
-#  This is the ACTUAL conference paper architecture.
-#  Small MLP: z→16→n_features, BatchNorm, ReLU, Tanh output.
-#  Trained with BCE loss (not WGAN-GP).
-#  Kept SEPARATE from ClassicalWGANGenerator so the two baselines
-#  are architecturally distinct and the results are interpretable.
-#
-#  Why this matters: Previously this used ClassicalWGANGenerator's
-#  architecture, which made the "conference BCE baseline" and the
-#  "new WGAN-GP fair baseline" structurally identical — a reviewer
-#  would immediately notice the results would be nearly identical too.
 # ================================================================
 class ClassicalBCEGenerator(nn.Module):
     """
     Conference paper architecture: small MLP, BCE loss.
     z(n_features) → Linear(16) → BatchNorm → ReLU → Linear(n_features) → Tanh
-    Trained with BCE loss; this is the ORIGINAL baseline from DSN 2026.
     """
 
     def __init__(self, n_features: int = 4):
@@ -338,16 +325,6 @@ class ClassicalBCEGenerator(nn.Module):
 
 # ================================================================
 #  CLASSICAL BASELINE 2: ClassicalWGANGenerator (Reviewer 2 fix)
-#
-#  The FAIR comparison to QGAN:
-#    - Same WGAN-GP loss (not BCE like the conference paper)
-#    - Same discriminator
-#    - Deeper MLP: z→32→64→32→n_features
-#    - NO BatchNorm (incompatible with WGAN-GP gradient penalty)
-#    - LeakyReLU throughout, Tanh output
-#
-#  This removes the loss-function confound from the conference comparison.
-#  If QGAN still outperforms this model, the advantage is architectural.
 # ================================================================
 class ClassicalWGANGenerator(nn.Module):
     """
@@ -382,16 +359,11 @@ class ClassicalWGANGenerator(nn.Module):
 
 # ================================================================
 #  CLASSICAL BASELINE 3: DCGANStyleGenerator (Reviewer 2 "modern method")
-#
-#  DCGAN (Radford et al. 2015) for tabular 1D EEG features.
-#  FIX 3: conv_out_size computed DYNAMICALLY via a dry-run, not hardcoded.
-#  BatchNorm allowed in GENERATOR (only prohibited in WGAN-GP discriminator).
 # ================================================================
 class DCGANStyleGenerator(nn.Module):
     """
     DCGAN-inspired 1D convolutional generator for tabular EEG features.
     FIX 3: output linear size computed dynamically — safe for any base_channels.
-    Reference: Radford et al. (2015) DCGAN.
     """
 
     def __init__(self, n_features: int = 4, base_channels: int = 32):
@@ -415,7 +387,6 @@ class DCGANStyleGenerator(nn.Module):
             nn.LeakyReLU(0.2, inplace=True),
         )
 
-        # FIX 3: compute conv output size dynamically via dry-run
         with torch.no_grad():
             dummy = torch.zeros(1, base_channels * 4, 1)
             conv_out = self.conv_blocks(dummy)
@@ -454,9 +425,6 @@ class DCGANStyleGenerator(nn.Module):
 
 # ================================================================
 #  CLASSICAL DISCRIMINATOR — shared across ALL models
-#  Input:  [batch, input_dim]
-#  Output: [batch, 1] — raw Wasserstein score (no Sigmoid)
-#  No BatchNorm: required by WGAN-GP gradient penalty
 # ================================================================
 class ClassicalDiscriminator(nn.Module):
     """
@@ -496,26 +464,6 @@ def build_models(condition: str,
                  generator_type: str = GEN_QUANTUM) -> tuple:
     """
     Construct (generator, ClassicalDiscriminator, n_params_gen, n_params_disc).
-
-    FIX 2: Returns parameter counts for logging to results JSON.
-
-    Args:
-        condition      : CONDITION_* (used only when generator_type=GEN_QUANTUM)
-        n_qubits       : qubit count for quantum generator (n_features + 2 ancilla)
-        n_features     : EEG feature count
-        generator_type : GEN_CLASSICAL_BCE | GEN_CLASSICAL_WGAN |
-                         GEN_DCGAN | GEN_QUANTUM
-
-    Returns:
-        gen            : generator model
-        disc           : ClassicalDiscriminator
-        n_params_gen   : int — trainable parameter count of generator
-        n_params_disc  : int — trainable parameter count of discriminator
-
-    NOTE on disc input_dim:
-        Quantum generator outputs n_qubits values (Pauli-Z per qubit).
-        Classical generators output n_features values.
-        Discriminator input_dim must match what it will receive.
     """
     if generator_type == GEN_QUANTUM:
         gen = GeneratorJournal(
@@ -524,7 +472,7 @@ def build_models(condition: str,
             n_layers=N_LAYERS,
             n_features=n_features,
         )
-        disc_input_dim = n_qubits   # quantum output is n_qubits wide
+        disc_input_dim = n_qubits
 
     elif generator_type == GEN_CLASSICAL_WGAN:
         gen = ClassicalWGANGenerator(n_features=n_features)
@@ -535,7 +483,6 @@ def build_models(condition: str,
         disc_input_dim = n_features
 
     elif generator_type == GEN_CLASSICAL_BCE:
-        # FIX 1: use the ACTUAL conference architecture (small MLP)
         gen = ClassicalBCEGenerator(n_features=n_features)
         disc_input_dim = n_features
 
@@ -545,7 +492,6 @@ def build_models(condition: str,
 
     disc = ClassicalDiscriminator(input_dim=disc_input_dim)
 
-    # FIX 2: count and return parameters
     n_params_gen  = sum(p.numel() for p in gen.parameters()  if p.requires_grad)
     n_params_disc = sum(p.numel() for p in disc.parameters() if p.requires_grad)
 
@@ -554,46 +500,22 @@ def build_models(condition: str,
     print(f"    [build_models] "
           f"gen={GENERATOR_LABELS.get(generator_type, generator_type)} | "
           f"cond={condition} | grad={grad_info} | "
-          f"params: gen={n_params_gen} disc={n_params_disc}")
+          f"params: gen={n_params_gen} disc={n_params_disc}", flush=True)
 
     return gen, disc, n_params_gen, n_params_disc
 
 
 # ================================================================
 #  FIX 5: EXPRESSIBILITY METRIC (Sim et al. 2019)
-#  Measures how well the circuit covers the space of all unitaries
-#  (Hilbert space coverage).  Higher = more expressive circuit.
-#
-#  Method: sample N pairs of random parameter vectors, compute
-#  fidelity |<psi1|psi2>|^2, compare KL divergence of this
-#  distribution to the Haar-random (uniform) distribution.
-#
-#  Run ONCE per architecture — saved to expressibility.json.
-#  Does NOT need training data.
 # ================================================================
 def compute_expressibility(n_qubits: int = 6,
                             n_layers: int = None,
                             n_samples: int = 1000,
                             n_bins: int = 75) -> dict:
-    """
-    Compute expressibility score for Arch C circuit (Sim et al. 2019).
-
-    Args:
-        n_qubits  : number of qubits
-        n_layers  : number of variational layers (default: N_LAYERS from config)
-        n_samples : number of random parameter pairs to sample
-        n_bins    : histogram bins for KL divergence
-
-    Returns:
-        dict with keys: expressibility_kl, n_qubits, n_layers, n_params,
-                        fidelity_mean, fidelity_std
-    """
     import numpy as np
     if n_layers is None:
         n_layers = N_LAYERS
 
-    #dev = qml.device("default.qubit", wires=n_qubits)  # BEFORE (slow):
-    # AFTER (10-50× faster for noiseless):
     try:
         dev = qml.device("lightning.qubit", wires=n_qubits)
     except Exception:
@@ -627,19 +549,15 @@ def compute_expressibility(n_qubits: int = 6,
 
     fidelities = np.array(fidelities)
 
-    # KL divergence vs Haar-random distribution
-    # Haar fidelity PDF: P_Haar(F) = (2^n - 1)(1-F)^(2^n - 2)
     dim     = 2 ** n_qubits
     bins    = np.linspace(0, 1, n_bins + 1)
     bin_mids = 0.5 * (bins[:-1] + bins[1:])
     bin_w   = bins[1] - bins[0]
 
-    # Circuit histogram
     hist, _ = np.histogram(fidelities, bins=bins, density=True)
-    P_circ  = hist * bin_w + 1e-10   # avoid log(0)
+    P_circ  = hist * bin_w + 1e-10
     P_circ  = P_circ / P_circ.sum()
 
-    # Haar PDF at bin midpoints
     P_haar = (dim - 1) * ((1 - bin_mids) ** (dim - 2)) * bin_w
     P_haar = P_haar + 1e-10
     P_haar = P_haar / P_haar.sum()
@@ -662,45 +580,35 @@ def compute_expressibility(n_qubits: int = 6,
                                "Technol. 2(12):1900070.",
     }
 
-    print(f"  Expressibility (Arch C, {n_qubits} qubits, {n_layers} layers):")
+    print(f"  Expressibility (Arch C, {n_qubits} qubits, {n_layers} layers):", flush=True)
     print(f"    KL divergence: {kl_div:.6f}  "
-          f"(lower = more expressive, closer to Haar-random)")
-    print(f"    Hilbert space dim: 2^{n_qubits} = {dim}")
+          f"(lower = more expressive, closer to Haar-random)", flush=True)
+    print(f"    Hilbert space dim: 2^{n_qubits} = {dim}", flush=True)
     return result
 
 
 def run_expressibility_sweep(feature_sets: dict = None,
                               output_file: str = "expressibility.json") -> dict:
-    """
-    Compute expressibility for each feature set (different qubit counts).
-    Saves results to expressibility.json for the paper.
-
-    Args:
-        feature_sets : dict of {name: n_features} — default covers all three
-        output_file  : output JSON path
-    """
     import json
 
     if feature_sets is None:
         feature_sets = {
-            "statistical": 4,   # 6 qubits
-            "spectral":    5,   # 7 qubits
-            "combined":    9,   # 11 qubits
+            "statistical": 4,
+            "spectral":    5,
+            "combined":    9,
         }
 
     results = {}
     for fs_name, n_feat in feature_sets.items():
-        n_qubits = n_feat + 2   # always 2 ancilla
+        n_qubits = n_feat + 2
         print(f"\n  Computing expressibility: {fs_name} "
-              f"({n_feat} features → {n_qubits} qubits)")
+              f"({n_feat} features → {n_qubits} qubits)", flush=True)
         results[fs_name] = compute_expressibility(
             n_qubits=n_qubits, n_samples=500
         )
 
-    # Also compute for a parameter-matched classical MLP for comparison
-    # Classical MLP with same parameter count as quantum circuit
     print(f"\n  (Expressibility is circuit-specific; classical MLPs have "
-          f"infinite expressibility by construction — no KL upper bound.)")
+          f"infinite expressibility by construction — no KL upper bound.)", flush=True)
     results["_note"] = (
         "Classical MLP generators are universal function approximators "
         "and do not have a bounded expressibility in the Sim et al. sense. "
@@ -709,12 +617,10 @@ def run_expressibility_sweep(feature_sets: dict = None,
     )
 
     with open(output_file, "w") as f:
-        import json
         json.dump(results, f, indent=2)
-    print(f"\n  Expressibility saved: {output_file}")
+    print(f"\n  Expressibility saved: {output_file}", flush=True)
     return results
 
 
 if __name__ == "__main__":
-    # Run expressibility sweep standalone
     run_expressibility_sweep()

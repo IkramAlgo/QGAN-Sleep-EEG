@@ -1,81 +1,18 @@
 # qgan/train_journal.py
 # Journal Extension — Multi-Baseline LOOCV Training
 #
-# ── WHAT CHANGED vs PREVIOUS VERSION (and WHY) ─────────────────────────────
+# ── FIX 1-6, NEW-1/2/3 (QPU job splitting) — see previous headers, unchanged ─
 #
-#  FIX 1 (CRITICAL — downstream evaluation methodology):
-#    evaluate_downstream() previously split the TEST SUBJECT's data 80/20
-#    and trained the downstream classifier on 80% of the held-out subject.
-#    This defeats the purpose of LOOCV — the downstream classifier was
-#    trained on data it should never have seen.
-#    CORRECT approach: train downstream classifier on the SAME training
-#    data the GAN used (N-1 subjects), evaluate on the full test subject.
-#
-#  FIX 2 (CRITICAL — scaler bias in augmented comparison):
-#    StandardScaler is now fit on REAL training data only, then applied
-#    to both the augmented set and the test set.
-#
-#  FIX 3 (Statistical testing minimum folds): Wilcoxon requires >= 5 folds.
-#
-#  FIX 4 (Parameter counts saved to results JSON — Nature requirement).
-#
-#  FIX 5 (get_loocv_loader returns 5 values, not 3).
-#
-#  FIX 6 (Dynamic minority class in downstream evaluation).
-#
-# ── NEW: QPU JOB-SPLITTING SUPPORT (added on top of FIX 1-6) ───────────────
-#
-#  NEW-1: ONLY_CONDITION env var — isolate a single condition (e.g. run
-#         qpu_sim without qpu_zne dragging along in the same job). Without
-#         this, --conditions qpu always ran BOTH qpu_sim and qpu_zne
-#         sequentially in one process, which is why QPU never finished.
-#
-#  NEW-2: ONLY_FOLD env var — isolate a single LOOCV fold. Without this,
-#         run_one_config() looped over all n_folds serially in one process
-#         (10 folds x ~5-6hrs each at 50 epochs = 50-60+ hrs), which is why
-#         nothing ever got checkpointed before SLURM's wall-clock killed it.
-#         This is what makes a per-fold SLURM job array possible.
-#
-#  NEW-3: out_file_path() accepts an optional fold_idx. When ONLY_FOLD is
-#         set, each array task writes its own fold-specific JSON file
-#         instead of all tasks fighting over one shared file (which risked
-#         one task's _atomic_write clobbering another's completed fold).
-#
-#  None of NEW-1/2/3 change behavior when the env vars are unset — the CPU
-#  path and your existing CPU result files are completely unaffected.
-#
-# ── HOW TO RUN ──────────────────────────────────────────────────────────────
-#   LOCAL SMOKE TEST (~10 min):
-#     python -m qgan.train_journal --mode local
-#
-#   FULL CPU (unchanged — you already have these results):
-#     CPU_EPOCHS=50 python -m qgan.train_journal --mode full --conditions cpu
-#
-#   FULL QPU — OLD WAY (do not use, this is what caused the 250+ hr problem):
-#     QPU_EPOCHS=100 python -m qgan.train_journal --mode full --conditions qpu
-#
-#   FULL QPU — NEW WAY (isolate condition + fold, run as SLURM array):
-#     ONLY_CONDITION=qpu_sim ONLY_FOLD=0 QPU_EPOCHS=50 FEATURE_SET=statistical \
-#         python -m qgan.train_journal --mode full --conditions qpu
-#
-#   SINGLE FEATURE SET:
-#     FEATURE_SET=combined python -m qgan.train_journal --mode full
-#
-#   RUN EXPRESSIBILITY SWEEP (once, before training):
-#     python -m qgan.train_journal --expressibility-only
-
-# Three separate jobs, one per feature set (CPU — unchanged, already done)
-#FEATURE_SET=statistical CPU_EPOCHS=50 python -m qgan.train_journal --mode full --conditions cpu
-#FEATURE_SET=spectral    CPU_EPOCHS=50 python -m qgan.train_journal --mode full --conditions cpu
-#FEATURE_SET=combined    CPU_EPOCHS=50 python -m qgan.train_journal --mode full --conditions cpu
-
-# QPU — NEW: submit as a SLURM array, one task per fold, ONE condition at a time.
-# See run_qpu_array.sh example at the bottom of this file's comments / your sbatch dir.
-# After all array tasks finish for a (condition, feature_set) pair, run:
-#   python merge_qpu_folds.py qpu_sim statistical
-# to stitch the per-fold files back into the single results_qpu_sim_statistical.json
-# shape that compute_significance_tests() expects.
-
+# ── NEW (this update): EPOCH-LEVEL CHECKPOINTING ────────────────────────────
+#  NEW-E1: Every epoch's full training state (generator, discriminator,
+#          optimizer states, loss history) is saved to disk after that
+#          epoch completes. If the job is killed/hangs/times out mid-fold,
+#          resubmitting the SAME array task resumes from the last saved
+#          epoch instead of restarting the fold from epoch 0.
+#  NEW-E2: All prints now use flush=True — SLURM buffers stdout fully when
+#          it's redirected to a log file, so without flush=True, nothing
+#          appears in the log until the process exits, making running jobs
+#          look "stuck" even when they're not.
 
 import argparse
 import copy
@@ -116,9 +53,9 @@ from qgan.models_journal import (
 #  EXPERIMENT CONFIG
 # ================================================================
 N_QUBITS_FOR_FEATURES = {
-    "statistical": 6,    # 4 features + 2 ancilla
-    "spectral":    7,    # 5 features + 2 ancilla
-    "combined":    11,   # 9 features + 2 ancilla
+    "statistical": 6,
+    "spectral":    7,
+    "combined":    11,
 }
 FEATURE_SET_N = {"statistical": 4, "spectral": 5, "combined": 9}
 DEFAULT_FEATURE_SETS = ["statistical", "spectral", "combined"]
@@ -132,7 +69,7 @@ LR_D = LEARNING_RATE * 5.0
 MIN_EPOCHS_TO_ACCEPT  = 10
 COLLAPSE_F1_THRESHOLD = 0.15
 WALL_CLOCK_BUFFER_S   = 600
-MIN_WILCOXON_FOLDS    = 5    # FIX 3: raised from 3 to 5
+MIN_WILCOXON_FOLDS    = 5
 
 CONDITION_GROUPS = {
     "cpu": [CONDITION_SIMULATOR, CONDITION_DATA_NOISE],
@@ -190,17 +127,53 @@ def _atomic_write(path: str, data: dict) -> None:
 def out_file_path(condition: str, feature_set: str,
                    generator_type: str = None,
                    fold_idx: int = None) -> str:
-    """
-    NEW: accepts an optional fold_idx. When set (i.e. ONLY_FOLD is in use),
-    returns a fold-specific filename so concurrent SLURM array tasks never
-    write to the same file and clobber each other.
-    Behavior is UNCHANGED when fold_idx is None (default) — CPU path and
-    existing full-sweep results files are unaffected.
-    """
     suffix = f"_fold{fold_idx}" if fold_idx is not None else ""
     if generator_type and generator_type != GEN_QUANTUM:
         return f"results_{condition}_{feature_set}_{generator_type}{suffix}.json"
     return f"results_{condition}_{feature_set}{suffix}.json"
+
+
+# NEW-E1: epoch-level checkpoint save/load helpers
+def _save_epoch_checkpoint(path: str, epoch: int, gen, disc,
+                            opt_g, opt_d, history: dict) -> None:
+    """Save full training state after a completed epoch."""
+    dir_name = os.path.dirname(os.path.abspath(path)) or "."
+    tmp_fd, tmp_path = tempfile.mkstemp(dir=dir_name, suffix=".tmp")
+    try:
+        torch.save({
+            "epoch":       epoch,
+            "gen_state":   gen.state_dict(),
+            "disc_state":  disc.state_dict(),
+            "opt_g_state": opt_g.state_dict(),
+            "opt_d_state": opt_d.state_dict(),
+            "history":     history,
+        }, tmp_path)
+        os.replace(tmp_path, path)
+    except Exception:
+        try:
+            os.unlink(tmp_path)
+        except OSError:
+            pass
+        raise
+
+
+def _load_epoch_checkpoint(path: str):
+    """Returns the checkpoint dict, or None if no valid checkpoint exists."""
+    if not os.path.exists(path):
+        return None
+    try:
+        return torch.load(path, map_location="cpu")
+    except Exception as e:
+        print(f"    WARNING: epoch checkpoint at {path} corrupt ({e}) — "
+              f"starting fresh.", flush=True)
+        return None
+
+
+def epoch_checkpoint_path(condition: str, feature_set: str, fold_idx: int,
+                           generator_type: str = None) -> str:
+    gt_suffix = (f"_{generator_type}"
+                 if generator_type and generator_type != GEN_QUANTUM else "")
+    return f"epoch_ckpt_{condition}_{feature_set}{gt_suffix}_fold{fold_idx}.pt"
 
 
 # ================================================================
@@ -242,10 +215,6 @@ def compute_mae(gen, data_tensor: torch.Tensor,
 
 def compute_clf(gen, disc, data_tensor: torch.Tensor,
                 n_features: int, disc_input_dim: int) -> dict:
-    """
-    Real/fake discrimination metrics.
-    Threshold = 0.0 (WGAN-GP convention: positive=real, negative=fake).
-    """
     from sklearn.metrics import (accuracy_score, precision_score,
                                   recall_score, f1_score, confusion_matrix)
     gen.eval(); disc.eval()
@@ -270,7 +239,6 @@ def compute_clf(gen, disc, data_tensor: torch.Tensor,
     labels = np.array([1]*n + [0]*n)
     preds  = (scores > 0.0).astype(int)
 
-    from sklearn.metrics import confusion_matrix
     cm = confusion_matrix(labels, preds, labels=[0, 1])
     tn, fp, fn, tp = cm.ravel()
     gen.train(); disc.train()
@@ -293,34 +261,22 @@ def evaluate_downstream(train_feats: torch.Tensor,
                           test_labels: torch.Tensor,
                           generator,
                           n_features: int) -> dict:
-    """
-    Train SVM and RandomForest on:
-      (a) real training data only (baseline)
-      (b) real training data + synthetic minority-class samples (augmented)
-    Evaluate on the held-out test subject.
-
-    FIX 1: train_feats = training subjects (N-1 subjects), NOT test subject.
-    FIX 2: scaler fit on real train data only, applied uniformly.
-    """
     X_train_real = train_feats[:, :n_features].numpy()
     y_train_real = train_labels.numpy()
     X_test       = test_feats[:, :n_features].numpy()
     y_test       = test_labels.numpy()
 
-    # Build augmented training set (FIX 6: minority class auto-detected)
     aug_feats, aug_labels = build_augmented_dataset(
         train_feats, train_labels, generator
-        # target_stage=None → auto-detects minority class per fold
     )
     X_train_aug = aug_feats[:, :n_features].numpy()
     y_train_aug = aug_labels.numpy()
 
-    # FIX 2: fit scaler on REAL training data only
     scaler = StandardScaler()
     scaler.fit(X_train_real)
 
     X_train_real_sc = scaler.transform(X_train_real)
-    X_train_aug_sc  = scaler.transform(X_train_aug)   # same scaler!
+    X_train_aug_sc  = scaler.transform(X_train_aug)
     X_test_sc       = scaler.transform(X_test)
 
     results       = {}
@@ -381,7 +337,6 @@ def evaluate_downstream(train_feats: torch.Tensor,
             except Exception as e:
                 results[key] = {"error": str(e)}
 
-    # Compute deltas (augmented vs real-only)
     for clf_name in ["svm", "rf"]:
         rk = f"{clf_name}_real"
         ak = f"{clf_name}_aug"
@@ -462,7 +417,6 @@ def aggregate_folds(fold_results: list) -> dict:
                 "all":  [round(v, 4) for v in vals],
             }
 
-    # Parameter summary — take from first fold
     for fold in fold_results:
         if "n_params_gen" in fold:
             agg["n_params_gen"]  = fold["n_params_gen"]
@@ -476,12 +430,6 @@ def aggregate_folds(fold_results: list) -> dict:
 #  STATISTICAL SIGNIFICANCE (FIX 3: min 5 folds) — unchanged
 # ================================================================
 def compute_significance_tests(all_results: dict) -> dict:
-    """
-    Pairwise Wilcoxon signed-rank test across LOOCV folds.
-    FIX 3: requires >= MIN_WILCOXON_FOLDS (5) folds.
-    Compares QWGAN-GP (Simulator) vs each classical baseline.
-    Primary metrics: StdMAE and SVM-aug MacroF1.
-    """
     stats = {}
 
     for feature_set in DEFAULT_FEATURE_SETS:
@@ -489,7 +437,6 @@ def compute_significance_tests(all_results: dict) -> dict:
         feat_key = f"{feature_set}_{n_feat}feat"
         stats[feature_set] = {}
 
-        # Get QGAN baseline fold values
         qgan_std_mae  = None
         qgan_macro_f1 = None
         for key, res in all_results.items():
@@ -548,18 +495,23 @@ def compute_significance_tests(all_results: dict) -> dict:
 
 
 # ================================================================
-#  TRAINING LOOP — one LOOCV fold — unchanged
+#  TRAINING LOOP — one LOOCV fold
+#  NEW-E1: epoch-level checkpointing/resume via ckpt_path.
+#  NEW-E2: all prints use flush=True.
 # ================================================================
 def train_one_fold(gen, disc, train_loader,
                    eval_feats: torch.Tensor,
                    n_features: int, disc_input_dim: int,
                    n_epochs: int, label: str,
-                   use_bce: bool = False) -> tuple:
+                   use_bce: bool = False,
+                   ckpt_path: str = None) -> tuple:
     """
     WGAN-GP (or BCE) training for one LOOCV fold.
-    Generator updated 2x per discriminator update.
 
-    eval_feats: used for MAE/CLF metrics only (test subject).
+    NEW: if ckpt_path is given, saves full training state after every
+    epoch and resumes from the last saved epoch if a checkpoint already
+    exists at that path. The checkpoint is deleted once the fold fully
+    completes (its results are already captured in the fold_result JSON).
     """
     opt_g = torch.optim.Adam(gen.parameters(),  lr=LR_G, betas=(0.0, 0.9))
     opt_d = torch.optim.Adam(disc.parameters(), lr=LR_D, betas=(0.0, 0.9))
@@ -567,95 +519,127 @@ def train_one_fold(gen, disc, train_loader,
     if use_bce:
         bce_loss = torch.nn.BCEWithLogitsLoss()
 
-    history    = {"gen_loss": [], "disc_loss": [], "times": []}
+    history     = {"gen_loss": [], "disc_loss": [], "times": []}
     best_d_loss = float("inf")
     best_gen    = copy.deepcopy(gen.state_dict())
     best_disc   = copy.deepcopy(disc.state_dict())
+    start_epoch = 0
     fold_start  = time.time()
 
-    for epoch in range(n_epochs):
-        t0 = time.time()
-        g_losses, d_losses = [], []
+    # NEW-E1: resume from checkpoint if present
+    if ckpt_path:
+        ckpt = _load_epoch_checkpoint(ckpt_path)
+        if ckpt is not None:
+            gen.load_state_dict(ckpt["gen_state"])
+            disc.load_state_dict(ckpt["disc_state"])
+            opt_g.load_state_dict(ckpt["opt_g_state"])
+            opt_d.load_state_dict(ckpt["opt_d_state"])
+            history     = ckpt["history"]
+            start_epoch = ckpt["epoch"] + 1
+            best_gen    = copy.deepcopy(gen.state_dict())
+            best_disc   = copy.deepcopy(disc.state_dict())
+            if history["disc_loss"]:
+                best_d_loss = min(history["disc_loss"])
+            print(f"    Resumed from epoch {start_epoch}/{n_epochs} "
+                  f"(checkpoint: {ckpt_path})", flush=True)
 
-        for (batch,) in train_loader:
-            real = batch.float()
-            bs   = real.shape[0]
+    if start_epoch >= n_epochs:
+        print(f"    All {n_epochs} epochs already completed in checkpoint. "
+              f"Skipping training.", flush=True)
+    else:
+        for epoch in range(start_epoch, n_epochs):
+            t0 = time.time()
+            g_losses, d_losses = [], []
 
-            if real.shape[-1] < disc_input_dim:
-                pad     = torch.zeros(bs, disc_input_dim - real.shape[-1])
-                real_in = torch.cat([real, pad], dim=-1)
-            else:
-                real_in = real[:, :disc_input_dim]
+            for (batch,) in train_loader:
+                real = batch.float()
+                bs   = real.shape[0]
 
-            # Generator update ×2
-            for _ in range(2):
+                if real.shape[-1] < disc_input_dim:
+                    pad     = torch.zeros(bs, disc_input_dim - real.shape[-1])
+                    real_in = torch.cat([real, pad], dim=-1)
+                else:
+                    real_in = real[:, :disc_input_dim]
+
+                for _ in range(2):
+                    z    = torch.randn(bs, n_features)
+                    fake = gen(z)
+                    fd   = fake[:, :disc_input_dim]
+
+                    if use_bce:
+                        rl     = torch.ones(bs, 1)
+                        g_loss = bce_loss(disc(fd), rl)
+                    else:
+                        g_loss = -disc(fd).mean()
+
+                    opt_g.zero_grad()
+                    g_loss.backward()
+                    torch.nn.utils.clip_grad_norm_(gen.parameters(), GRAD_CLIP)
+                    opt_g.step()
+                    g_losses.append(g_loss.item())
+
                 z    = torch.randn(bs, n_features)
-                fake = gen(z)
+                fake = gen(z).detach()
                 fd   = fake[:, :disc_input_dim]
 
                 if use_bce:
                     rl     = torch.ones(bs, 1)
-                    g_loss = bce_loss(disc(fd), rl)
+                    fl     = torch.zeros(bs, 1)
+                    d_loss = (bce_loss(disc(real_in), rl) +
+                              bce_loss(disc(fd), fl)) / 2
                 else:
-                    g_loss = -disc(fd).mean()
+                    gp     = gradient_penalty(disc, real_in, fd)
+                    d_loss = (-disc(real_in).mean() +
+                               disc(fd).mean() +
+                               LAMBDA_GP * gp)
 
-                opt_g.zero_grad()
-                g_loss.backward()
-                torch.nn.utils.clip_grad_norm_(gen.parameters(), GRAD_CLIP)
-                opt_g.step()
-                g_losses.append(g_loss.item())
+                opt_d.zero_grad()
+                d_loss.backward()
+                torch.nn.utils.clip_grad_norm_(disc.parameters(), GRAD_CLIP)
+                opt_d.step()
+                d_losses.append(d_loss.item())
 
-            # Discriminator update ×1
-            z    = torch.randn(bs, n_features)
-            fake = gen(z).detach()
-            fd   = fake[:, :disc_input_dim]
+            avg_g   = float(np.mean(g_losses))
+            avg_d   = float(np.mean(d_losses))
+            elapsed = time.time() - t0
 
-            if use_bce:
-                rl     = torch.ones(bs, 1)
-                fl     = torch.zeros(bs, 1)
-                d_loss = (bce_loss(disc(real_in), rl) +
-                          bce_loss(disc(fd), fl)) / 2
-            else:
-                gp     = gradient_penalty(disc, real_in, fd)
-                d_loss = (-disc(real_in).mean() +
-                           disc(fd).mean() +
-                           LAMBDA_GP * gp)
+            history["gen_loss"].append(avg_g)
+            history["disc_loss"].append(avg_d)
+            history["times"].append(elapsed)
 
-            opt_d.zero_grad()
-            d_loss.backward()
-            torch.nn.utils.clip_grad_norm_(disc.parameters(), GRAD_CLIP)
-            opt_d.step()
-            d_losses.append(d_loss.item())
+            if avg_d < best_d_loss:
+                best_d_loss = avg_d
+                best_gen    = copy.deepcopy(gen.state_dict())
+                best_disc   = copy.deepcopy(disc.state_dict())
 
-        avg_g   = float(np.mean(g_losses))
-        avg_d   = float(np.mean(d_losses))
-        elapsed = time.time() - t0
-
-        history["gen_loss"].append(avg_g)
-        history["disc_loss"].append(avg_d)
-        history["times"].append(elapsed)
-
-        if avg_d < best_d_loss:
-            best_d_loss = avg_d
-            best_gen    = copy.deepcopy(gen.state_dict())
-            best_disc   = copy.deepcopy(disc.state_dict())
-
-        if (epoch + 1) % 10 == 0 or epoch == 0 or (epoch + 1) == n_epochs:
             done = time.time() - fold_start
-            eta  = _fmt_seconds((done / (epoch+1)) * (n_epochs - epoch - 1))
+            n_done_this_run = epoch - start_epoch + 1
+            eta = _fmt_seconds((done / n_done_this_run) * (n_epochs - epoch - 1))
             print(f"      Epoch [{epoch+1:3d}/{n_epochs}] "
                   f"G:{avg_g:+.4f}  D:{avg_d:+.4f}  "
-                  f"t:{elapsed:.1f}s  ETA:{eta}  [{label}]")
+                  f"t:{elapsed:.1f}s  ETA:{eta}  [{label}]", flush=True)
+
+            # NEW-E1: save checkpoint after every epoch
+            if ckpt_path:
+                _save_epoch_checkpoint(ckpt_path, epoch, gen, disc,
+                                        opt_g, opt_d, history)
 
     gen.load_state_dict(best_gen)
     disc.load_state_dict(best_disc)
 
-    history["avg_time_per_epoch"] = round(float(np.mean(history["times"])), 2)
+    history["avg_time_per_epoch"] = (
+        round(float(np.mean(history["times"])), 2) if history["times"] else 0.0
+    )
     history["total_fold_time_s"]  = round(time.time() - fold_start, 1)
     history["n_epochs_trained"]   = n_epochs
 
     mae = compute_mae(gen, eval_feats, n_features)
     clf = compute_clf(gen, disc, eval_feats, n_features, disc_input_dim)
+
+    # NEW-E1: clean up the epoch checkpoint once the fold is fully done —
+    # its results are now captured in the fold_result JSON, no longer needed.
+    if ckpt_path and os.path.exists(ckpt_path):
+        os.remove(ckpt_path)
 
     return history, mae, clf, gen, disc
 
@@ -670,22 +654,12 @@ def run_one_config(condition: str,
                    subject_paths: list,
                    all_features: list,
                    all_labels: list) -> dict:
-    """
-    Run LOOCV for one (condition, generator_type, feature_set) combination.
-    Checkpointed atomically after each fold.
-
-    NEW: if the ONLY_FOLD env var is set, this restricts execution to a
-    single fold and writes to a fold-specific output file (see
-    out_file_path). This is what makes per-fold SLURM job arrays possible
-    for QPU conditions, without touching CPU behavior at all.
-    """
     is_quantum = (generator_type == GEN_QUANTUM)
     is_bce     = (generator_type == GEN_CLASSICAL_BCE)
     label      = (CONDITION_LABELS.get(condition, condition)
                   if is_quantum
                   else GENERATOR_LABELS.get(generator_type, generator_type))
 
-    # NEW: fold-specific output file when ONLY_FOLD is set
     only_fold_env = os.getenv("ONLY_FOLD")
     fold_override = int(only_fold_env) if only_fold_env is not None else None
     out_file = out_file_path(condition, feature_set, generator_type,
@@ -696,15 +670,14 @@ def run_one_config(condition: str,
     n_qubits   = N_QUBITS_FOR_FEATURES[feature_set]
     feat_key   = f"{feature_set}_{n_features}feat"
 
-    # Load checkpoint
     results: dict = {}
     if os.path.exists(out_file):
         try:
             with open(out_file) as f:
                 results = json.load(f)
-            print(f"  Loaded checkpoint: {out_file}")
+            print(f"  Loaded checkpoint: {out_file}", flush=True)
         except json.JSONDecodeError:
-            print(f"  WARNING: {out_file} corrupt — starting fresh.")
+            print(f"  WARNING: {out_file} corrupt — starting fresh.", flush=True)
 
     if feat_key not in results:
         results[feat_key] = {
@@ -725,36 +698,32 @@ def run_one_config(condition: str,
 
     pending = [i for i in range(n_folds) if i not in valid_indices]
 
-    # NEW: restrict to a single fold if ONLY_FOLD is set
     if fold_override is not None:
         pending = [f for f in pending if f == fold_override]
 
     if not pending:
-        print(f"  All requested folds done for {feat_key}. Skipping.")
+        print(f"  All requested folds done for {feat_key}. Skipping.", flush=True)
         return results
 
-    print(f"\n  {'─'*60}")
+    print(f"\n  {'─'*60}", flush=True)
     print(f"  Config: {label} | {feature_set} ({n_features} features, "
-          f"{n_qubits} qubits)")
-    print(f"  Folds pending: {pending}")
+          f"{n_qubits} qubits)", flush=True)
+    print(f"  Folds pending: {pending}", flush=True)
 
     noise_level = NOISE_LEVEL if condition == CONDITION_DATA_NOISE else 0.0
     disc_input_dim = n_qubits if is_quantum else n_features
 
-    # NEW: loop over `pending` (which respects ONLY_FOLD) instead of
-    # range(n_folds). Previously this always ran ALL folds serially in one
-    # process — that's what made a single QPU job take 40-60+ hours.
     for fold_idx in pending:
         if fold_idx in valid_indices:
             continue
         if _seconds_until_wall_limit() < WALL_CLOCK_BUFFER_S:
-            print(f"\n  WALL-CLOCK GUARD: stopping cleanly.")
+            print(f"\n  WALL-CLOCK GUARD: stopping cleanly.", flush=True)
             return results
 
         test_subj = os.path.basename(subject_paths[fold_idx])
-        print(f"\n  ── Fold {fold_idx+1}/{n_folds} (test: {test_subj}) ──")
+        print(f"\n  ── Fold {fold_idx+1}/{n_folds} (test: {test_subj}) ──",
+              flush=True)
 
-        # FIX 5: unpack 5 values (added train_f, train_l)
         train_loader, train_f, train_l, test_f, test_l = get_loocv_loader(
             all_features, all_labels,
             test_idx=fold_idx,
@@ -763,12 +732,16 @@ def run_one_config(condition: str,
             do_oversample=True,
         )
 
-        # FIX 4: build_models now returns param counts
         gen, disc, n_params_gen, n_params_disc = build_models(
             condition=condition,
             n_qubits=n_qubits,
             n_features=n_features,
             generator_type=generator_type,
+        )
+
+        # NEW-E1: build the epoch-checkpoint path for this specific fold
+        ckpt_path = epoch_checkpoint_path(
+            condition, feature_set, fold_idx, generator_type
         )
 
         fold_label = f"{label} | {feature_set} | fold {fold_idx+1}"
@@ -780,9 +753,9 @@ def run_one_config(condition: str,
             n_epochs=n_epochs,
             label=fold_label,
             use_bce=is_bce,
+            ckpt_path=ckpt_path,
         )
 
-        # FIX 1 + FIX 2: pass train_f/train_l, not test_f
         try:
             downstream = evaluate_downstream(
                 train_feats=train_f,
@@ -798,7 +771,8 @@ def run_one_config(condition: str,
 
         is_collapsed = clf["F1"] < COLLAPSE_F1_THRESHOLD
         if is_collapsed:
-            print(f"    WARNING: Fold {fold_idx} collapsed (F1={clf['F1']:.4f}).")
+            print(f"    WARNING: Fold {fold_idx} collapsed (F1={clf['F1']:.4f}).",
+                  flush=True)
 
         fold_result = {
             "fold_idx":       fold_idx,
@@ -807,8 +781,8 @@ def run_one_config(condition: str,
             "mae":            mae,
             "clf":            clf,
             "downstream":     downstream,
-            "n_params_gen":   n_params_gen,    # FIX 4
-            "n_params_disc":  n_params_disc,   # FIX 4
+            "n_params_gen":   n_params_gen,
+            "n_params_disc":  n_params_disc,
             "history": {
                 "n_epochs_trained":   n_epochs,
                 "avg_time_per_epoch": history["avg_time_per_epoch"],
@@ -836,9 +810,9 @@ def run_one_config(condition: str,
               f"StdMAE:{mae['std_MAE']:.4f}  "
               f"SVM_N1_F1:{svm_n1}  ΔMacroF1:{delta}  "
               f"GenParams:{n_params_gen}  "
-              f"Time:{_fmt_seconds(history['total_fold_time_s'])}")
+              f"Time:{_fmt_seconds(history['total_fold_time_s'])}", flush=True)
 
-    print(f"\n  Checkpoint saved: {out_file}")
+    print(f"\n  Checkpoint saved: {out_file}", flush=True)
     return results
 
 
@@ -855,21 +829,20 @@ def main():
                         help="Run only expressibility sweep then exit.")
     args = parser.parse_args()
 
-    print(f"\n  {'='*70}")
-    print(f"  JOURNAL QGAN — MULTI-BASELINE LOOCV")
-    print(f"  Python: {sys.version.split()[0]}")
+    print(f"\n  {'='*70}", flush=True)
+    print(f"  JOURNAL QGAN — MULTI-BASELINE LOOCV", flush=True)
+    print(f"  Python: {sys.version.split()[0]}", flush=True)
     try:
         import pennylane as qml
-        print(f"  PennyLane: {qml.__version__}")
+        print(f"  PennyLane: {qml.__version__}", flush=True)
     except ImportError:
-        print(f"  PennyLane: NOT FOUND")
-    print(f"  SLURM job: {os.getenv('SLURM_JOB_ID', 'not set')}")
+        print(f"  PennyLane: NOT FOUND", flush=True)
+    print(f"  SLURM job: {os.getenv('SLURM_JOB_ID', 'not set')}", flush=True)
 
-    # Expressibility-only mode
     if args.expressibility_only:
-        print(f"\n  Running expressibility sweep only...")
+        print(f"\n  Running expressibility sweep only...", flush=True)
         run_expressibility_sweep(output_file=EXPRESSIBILITY_FILE)
-        print(f"  Done. Saved: {EXPRESSIBILITY_FILE}")
+        print(f"  Done. Saved: {EXPRESSIBILITY_FILE}", flush=True)
         return
 
     feature_set_env = os.getenv("FEATURE_SET", "all")
@@ -881,46 +854,44 @@ def main():
         n_epochs_qpu  = 3
         subject_paths = SUBJECT_PATHS[:3]
         feature_sets  = ["statistical"]
-        print(f"\n  MODE: LOCAL SMOKE TEST (3 epochs, 3 subjects, statistical)")
+        print(f"\n  MODE: LOCAL SMOKE TEST (3 epochs, 3 subjects, statistical)",
+              flush=True)
     else:
         n_epochs_cpu  = int(os.getenv("CPU_EPOCHS", "50"))
         n_epochs_qpu  = int(os.getenv("QPU_EPOCHS", "100"))
         subject_paths = [p for p in SUBJECT_PATHS if os.path.exists(p)]
         print(f"\n  MODE: FULL | CPU_EPOCHS={n_epochs_cpu} "
-              f"QPU_EPOCHS={n_epochs_qpu}")
-        print(f"  Feature sets: {feature_sets}")
+              f"QPU_EPOCHS={n_epochs_qpu}", flush=True)
+        print(f"  Feature sets: {feature_sets}", flush=True)
 
     conditions_to_run = CONDITION_GROUPS[args.conditions]
 
-    # NEW: ONLY_CONDITION — isolate a single condition (e.g. qpu_sim without
-    # qpu_zne). Without this, --conditions qpu always ran both back-to-back
-    # in one process. This has no effect on the CPU path since CPU jobs
-    # never set this variable.
     only_condition = os.getenv("ONLY_CONDITION")
     if only_condition:
         conditions_to_run = [c for c in conditions_to_run if c == only_condition]
         if not conditions_to_run:
             print(f"  ERROR: ONLY_CONDITION={only_condition!r} not found in "
-                  f"conditions group '{args.conditions}'. Nothing to run.")
+                  f"conditions group '{args.conditions}'. Nothing to run.",
+                  flush=True)
             return
 
     print(f"  Conditions: "
-          f"{[CONDITION_LABELS.get(c, c) for c in conditions_to_run]}")
-    print(f"  Subjects: {len(subject_paths)}")
+          f"{[CONDITION_LABELS.get(c, c) for c in conditions_to_run]}", flush=True)
+    print(f"  Subjects: {len(subject_paths)}", flush=True)
     only_fold_env = os.getenv("ONLY_FOLD")
     if only_fold_env is not None:
-        print(f"  ONLY_FOLD: {only_fold_env} (restricting to a single fold)")
-    print(f"  {'='*70}")
+        print(f"  ONLY_FOLD: {only_fold_env} (restricting to a single fold)",
+              flush=True)
+    print(f"  {'='*70}", flush=True)
 
     all_summary = {}
 
     for feature_set in feature_sets:
         n_features = FEATURE_SET_N[feature_set]
-        print(f"\n  {'#'*70}")
-        print(f"  FEATURE SET: {feature_set} ({n_features} features)")
-        print(f"  {'#'*70}")
+        print(f"\n  {'#'*70}", flush=True)
+        print(f"  FEATURE SET: {feature_set} ({n_features} features)", flush=True)
+        print(f"  {'#'*70}", flush=True)
 
-        # load_all_subjects returns (features, labels, scaler) — FIX 1 in data loader
         result = load_all_subjects(
             n_features=n_features,
             feature_set=feature_set,
@@ -930,20 +901,18 @@ def main():
         scaler_info = result[2] if len(result) > 2 else {}
 
         if len(all_features) < 2:
-            print(f"  Skipping {feature_set}: need >= 2 subjects.")
+            print(f"  Skipping {feature_set}: need >= 2 subjects.", flush=True)
             continue
 
-        # Save scaler info for reproducibility
         if scaler_info:
             _atomic_write(f"scaler_{feature_set}.json", scaler_info)
 
-        # 1. Classical baselines — unchanged, CPU only
         if args.conditions in ("cpu", "all"):
             for gen_type in [GEN_CLASSICAL_BCE,
                              GEN_CLASSICAL_WGAN,
                              GEN_DCGAN]:
                 print(f"\n  Running classical: "
-                      f"{GENERATOR_LABELS[gen_type]}")
+                      f"{GENERATOR_LABELS[gen_type]}", flush=True)
                 res = run_one_config(
                     condition=CONDITION_SIMULATOR,
                     generator_type=gen_type,
@@ -956,12 +925,11 @@ def main():
                 key = f"classical_{gen_type}_{feature_set}"
                 all_summary[key] = res
 
-        # 2. Quantum conditions (now respects ONLY_CONDITION / ONLY_FOLD)
         for condition in conditions_to_run:
             n_epochs = (n_epochs_qpu
                         if condition in (CONDITION_QPU_SIM, CONDITION_QPU_ZNE)
                         else n_epochs_cpu)
-            print(f"\n  Running quantum: {CONDITION_LABELS[condition]}")
+            print(f"\n  Running quantum: {CONDITION_LABELS[condition]}", flush=True)
             res = run_one_config(
                 condition=condition,
                 generator_type=GEN_QUANTUM,
@@ -975,12 +943,12 @@ def main():
             all_summary[key] = res
 
     _atomic_write(SUMMARY_FILE, all_summary)
-    print(f"\n  Summary saved: {SUMMARY_FILE}")
+    print(f"\n  Summary saved: {SUMMARY_FILE}", flush=True)
 
     try:
         stats = compute_significance_tests(all_summary)
         _atomic_write(STATS_FILE, stats)
-        print(f"  Significance tests saved: {STATS_FILE}")
+        print(f"  Significance tests saved: {STATS_FILE}", flush=True)
         _print_stats_summary(stats)
     except Exception as e:
         warnings.warn(f"Significance testing failed: {e}")
@@ -989,17 +957,17 @@ def main():
 
 
 # ================================================================
-#  PRINTING — unchanged
+#  PRINTING
 # ================================================================
 def _print_summary_table(all_results: dict, feature_sets: list) -> None:
     W = 120
-    print(f"\n  {'='*W}")
-    print(f"  FINAL RESULTS (mean ± std across LOOCV folds)")
-    print(f"  {'─'*W}")
+    print(f"\n  {'='*W}", flush=True)
+    print(f"  FINAL RESULTS (mean ± std across LOOCV folds)", flush=True)
+    print(f"  {'─'*W}", flush=True)
     hdr = (f"  {'Config':<42} {'Feat':<12} {'Acc':<14} {'F1':<14} "
            f"{'StdMAE':<14} {'SVM_N1_F1':<14} {'Params_G':<12} {'Time/ep'}")
-    print(hdr)
-    print(f"  {'─'*W}")
+    print(hdr, flush=True)
+    print(f"  {'─'*W}", flush=True)
 
     for key, res in all_results.items():
         for feat_key, cdata in res.items():
@@ -1025,18 +993,18 @@ def _print_summary_table(all_results: dict, feature_sets: list) -> None:
                   f"{fmt('std_MAE'):<14} "
                   f"{fmt('downstream_svm_aug_N1_F1'):<14} "
                   f"{str(params_g):<12} "
-                  f"{fmt('avg_time_per_epoch')}s")
+                  f"{fmt('avg_time_per_epoch')}s", flush=True)
 
-    print(f"  {'='*W}\n")
+    print(f"  {'='*W}\n", flush=True)
 
 
 def _print_stats_summary(stats: dict) -> None:
-    print(f"\n  Wilcoxon Signed-Rank (H1: QGAN StdMAE < Classical):")
+    print(f"\n  Wilcoxon Signed-Rank (H1: QGAN StdMAE < Classical):", flush=True)
     for feat_set, comparisons in stats.items():
         if "_note" in comparisons:
-            print(f"  {feat_set}: {comparisons['_note']}")
+            print(f"  {feat_set}: {comparisons['_note']}", flush=True)
             continue
-        print(f"  Feature set: {feat_set}")
+        print(f"  Feature set: {feat_set}", flush=True)
         for baseline, tests in comparisons.items():
             for metric, result in tests.items():
                 if isinstance(result, dict) and "error" not in result:
@@ -1044,7 +1012,7 @@ def _print_stats_summary(stats: dict) -> None:
                            if result.get("significant_p05") else "n.s.")
                     print(f"    vs {baseline:<35} {metric:<22} "
                           f"p={result['p_value']:.4f} n={result['n_folds']} "
-                          f"[{sig}]")
+                          f"[{sig}]", flush=True)
 
 
 if __name__ == "__main__":
